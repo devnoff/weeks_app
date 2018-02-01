@@ -59,47 +59,63 @@ export default class App extends Component {
 
   _handleCreateRequest = () => {
     this.setState({ showCreateOverlay: true })
-    // if (this.weekHeader.state.show) 
-    //   this.weekHeader.hide()
-    // else {
-    //   this.weekHeader.show()
-    // }
 
-    // var c = [this.todoColumn1, this.todoColumn2, this.todoColumn3]
-    // for (var i in c) {
-    //   if (c[i].state.show) {
-    //     c[i].hide()
-    //   } else {
-    //     c[i].show()
-    //   }
-    // }
-
+    console.log('_handleCreateRequest')
+    
     let endCol = this.endColumn
     let pc = endCol.panelController
-    pc.present({ 
-      ref: 'confirmPanel',
+    pc.push({ 
+      ref: 'createPanel',
        el: <ConfirmPanel
-            ref={comp => pc.refs['confirmPanel'] = comp}
+            key='createPanel'
+            ref={comp => pc.refs['createPanel'] = comp}
             confirmText="Next"
-            useCancel={true}
-            message=" "
+            cancelText="cancel"
+            message={`Create${'\n'}To-Do Item`}
             />
-    }, () => {
+    }, () => { // Fires after present create panel
       endCol.moreButtonFadeOut()
-    }, (instance) => {
-      instance.onConfirm = () => {
-        alert('confirmed')
-        pc.dismiss(() => {
-          endCol.moreButtonFadeIn()
+    }, (createIntance) => { // Injector
+      createIntance.onConfirm = () => {
+        // Present CellSelectConfirmPanel
+        pc.push({ 
+          ref: 'selectPanel',
+           el: <ConfirmPanel
+                key='selectPanel'
+                ref={comp => pc.refs['selectPanel'] = comp}
+                confirmText="Done"
+                cancelText="cancel"
+                message={`Choose cells you want to place the To-Do item`}
+                />
+        }, () => { // Fires after present select panel
+          
+        }, (selectInstance) => { // Injector
+          selectInstance.onConfirm = () => {
+            pc.popToRootPanel(() => {
+              endCol.moreButtonFadeIn()
+            })
+            alert('created!')
+            this.setState({ showCreateOverlay: false, selectionMode: false })
+          }
+
+          selectInstance.onCancel = () => {
+            pc.popToRootPanel(() => {
+              endCol.moreButtonFadeIn()
+            })
+            this.setState({ showCreateOverlay: false, selectionMode: false })
+          }
         })
-        this.setState({ showCreateOverlay: false })
+
+        // Hide Close Overlay & Switch to cell select mode
+        this.setState({ showCreateOverlay: false, selectionMode: true })
+
       }
 
-      instance.onCancel = () => {
-        pc.dismiss(() => {
+      createIntance.onCancel = () => {
+        pc.popToRootPanel(() => {
           endCol.moreButtonFadeIn()
         })
-        this.setState({ showCreateOverlay: false })
+        this.setState({ showCreateOverlay: false, selectionMode: false })
       }
     })
   }
