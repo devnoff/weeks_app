@@ -5,12 +5,13 @@ import {
 
 export default class FadeItem extends Component {
 
+  visible = false
+
   constructor(props) {
     super(props)
 
     this.state = {
-      fade: new Animated.Value(0),
-      visible: false
+      fade: new Animated.Value(0)
     }
   }
 
@@ -43,10 +44,14 @@ export default class FadeItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: true
-      });
+    ]).start((info) => {
+
+      if (!info.finished) {
+        // console.log('complete while animating')
+        return
+      }
+
+      this.visible = true
   
       if (this.props.onFinishAnim)
         this.props.onFinishAnim()
@@ -65,10 +70,11 @@ export default class FadeItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: false
-      });
+    ]).start((info) => {
+
+      if (!info.finished) return
+
+      this.visible = false
       
       if (this.props.onFinishAnim)
         this.props.onFinishAnim()
@@ -76,10 +82,11 @@ export default class FadeItem extends Component {
   }
 
   render() {
-    let { fade, visible } = this.state;
+    let { fade } = this.state;
 
     return (
       <Animated.View
+        pointerEvents={this.props.pointerEvents || undefined}
         style={[this.props.style, {
           opacity: fade
         }]}

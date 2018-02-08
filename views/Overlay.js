@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   body: {
-    flex: isIphoneX() ? 21 : 7,
+    flex: isIphoneX() ? 21 : 10,
     borderRightColor: '#666',
     borderRightWidth: 4,
   },

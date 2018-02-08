@@ -12,6 +12,7 @@ import Panel from './Panel'
 import OnLayout from 'react-native-on-layout'
 import WeekManager from '../manager/week'
 import ItemManager from '../manager/item';
+import Notification from '../manager/notification';
 
 export default class ItemPanel extends Panel {  
 
@@ -26,7 +27,8 @@ export default class ItemPanel extends Panel {
 
     this.state = {
       show: false,
-      todoItem: props.item
+      todoItem: props.item,
+      disabled: false
     }
 
   }
@@ -39,8 +41,9 @@ export default class ItemPanel extends Panel {
     this.setState({show: false})
   }
 
-  _onPressTitleButton() {
-    alert('pressed title')
+  _onPressTitleButton() {    
+    this.setState({ disabled: true })
+    Notification.post('edit_overlay_request', this.props.item)
   }
 
   async _onToggleDoneButton() {
@@ -60,32 +63,50 @@ export default class ItemPanel extends Panel {
   }
 
   _onPressDuplicateButton() {
+    this.setState({ disabled: true })
 
+    // Cell Select Mode 
+    // Confirm Panel
+    Notification.post('dupliate_overlay_request', this.props.item)
   }
 
   _onPressTrashButton() {
-
+    this.setState({ disabled: true })
+    
+    // Delete Confirm Panel
+    Notification.post('delete_overlay_request', this.props.item)
   }
 
-  checkComplete() {
+  checkComplete(el) {
     var done = true
     let items = [this.item1, this.item2, this.item3, this.item4, this.item5]
     for (var i in items) {
 
       let item = items[i]
 
-      if (this.state.show && !item.state.visible) {
+      // if (item == null){
+      //   done = false
+      //   break
+      // } 
+
+      // console.log(`el: ${el}  it: ${i} show : ${this.state.show} item visible: ${item.visible}`)
+
+
+      if (this.state.show && !item.visible) {
         done = false
+        break
       }
 
-      if (!this.state.show && item.state.visible) {
+      if (!this.state.show && item.visible) {
         done = false
+        break
       }
     }
 
     if (!done) return
 
     if (this.state.show) {
+      // console.log('on show!')
       if (this.onShow) this.onShow()
     } else {
       if (this.onHide) this.onHide()
@@ -95,7 +116,7 @@ export default class ItemPanel extends Panel {
 
   render() {
 
-    const { show, todoItem } = this.state
+    const { show, todoItem, disabled } = this.state
 
     return (
       <OnLayout pointerEvents="box-none" style={styles.view}>
@@ -108,25 +129,27 @@ export default class ItemPanel extends Panel {
             <SlideItem
               style={styles.slideItem}
               ref={(item) => { this.item1 = item}}
-              onFinishAnim={this.checkComplete.bind(this)}
+              onFinishAnim={this.checkComplete.bind(this,'title')}
               x={-80} 
               delay={50} 
               to={10} 
               show={show} >
-              <Text style={styles.title}>
-                {todoItem.title}
-                {<Icon color="#ccc" name="lead-pencil" size={15}/>}
-              </Text>
+              <TouchableOpacity disabled={disabled} onPress={this._onPressTitleButton.bind(this)}>
+                <Text style={styles.title}>
+                  {todoItem.title}
+                  {<Icon color="#ccc" name="lead-pencil" size={15}/>}
+                </Text>
+              </TouchableOpacity>
             </SlideItem>
             <SlideItem 
               style={styles.slideItem}
               ref={(item) => { this.item2 = item}}
-              onFinishAnim={this.checkComplete.bind(this)}
+              onFinishAnim={this.checkComplete.bind(this, 'note')}
               x={-80} 
               delay={150} 
               to={10} 
               show={show} >
-              <TouchableOpacity onPress={this._onPressTitleButton.bind(this)}>
+              <TouchableOpacity disabled={disabled} onPress={this._onPressTitleButton.bind(this)}>
                 <Text style={styles.description}>
                   {todoItem.note}
                 </Text>
@@ -140,12 +163,13 @@ export default class ItemPanel extends Panel {
             <FadeItem 
               style={styles.slideItem}
               ref={(item) => { this.item3 = item}}
-              onFinishAnim={this.checkComplete.bind(this)}
+              onFinishAnim={this.checkComplete.bind(this, 'check')}
               delay={0}
               show={show} >
               <TouchableOpacity onPress={this._onToggleDoneButton.bind(this)}>
                 <View style={[styles.iconBox, styles.checkbox]}>
                   <Icon color="#666" style={(todoItem.done?styles.checked:undefined)} name="check" size={30}/>
+                  {todoItem.done ? <Text style={styles.done}>Done</Text> : undefined}
                 </View>
               </TouchableOpacity>
             </FadeItem>
@@ -157,10 +181,10 @@ export default class ItemPanel extends Panel {
             <FadeItem 
               style={[styles.slideItem, styles.bottomIcon]}
               ref={(item) => { this.item4 = item}}
-              onFinishAnim={this.checkComplete.bind(this)}
-              delay={0}
+              onFinishAnim={this.checkComplete.bind(this, 'copy')}
+              delay={50}
               show={show} >
-              <TouchableOpacity onPress={this._onPressDuplicateButton.bind(this)}>
+              <TouchableOpacity disabled={disabled} onPress={this._onPressDuplicateButton.bind(this)}>
                 <View style={styles.iconBox}>
                   <Icon color="#666" name="content-copy" size={18}/>
                 </View>
@@ -169,10 +193,10 @@ export default class ItemPanel extends Panel {
             <FadeItem 
               style={[styles.slideItem, styles.bottomIcon]}
               ref={(item) => { this.item5 = item}}
-              onFinishAnim={this.checkComplete.bind(this)}
-              delay={0}
+              onFinishAnim={this.checkComplete.bind(this, 'delete')}
+              delay={100}
               show={show} >
-              <TouchableOpacity onPress={this._onPressTrashButton.bind(this)}>
+              <TouchableOpacity disabled={disabled} onPress={this._onPressTrashButton.bind(this)}>
                 <View style={styles.iconBox}>
                   <Icon color="#666" name="delete" size={20}/>
                 </View>
@@ -244,5 +268,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  done: {
+    position: 'absolute',
+    fontSize: 9,
+    color: 'green',
+    bottom: 0
   }
 })

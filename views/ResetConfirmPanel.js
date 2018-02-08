@@ -36,11 +36,11 @@ export default class ResetConfirmPanel extends Panel {
 
       let item = items[i]
 
-      if (this.state.show && !item.state.visible) {
+      if (this.state.show && !item.visible) {
         done = false
       }
 
-      if (!this.state.show && item.state.visible) {
+      if (!this.state.show && item.visible) {
         done = false
       }
     }

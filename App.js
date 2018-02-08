@@ -19,6 +19,10 @@ import Overlay from './views/Overlay'
 import Notification from './manager/notification'
 import CreateModal from './views/CreateItemModal'
 import ConfirmPanel from './views/ConfirmPanel'
+import CellSelectionController from './controllers/CellSelectionController'
+import ItemManager from './manager/item';
+
+// console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -45,24 +49,176 @@ export default class App extends Component {
       showCreateOverlay: false
     }
 
+
   }
 
   componentDidMount() {
     AppState.addEventListener('change', this._handleAppStateChange);
-    Notification.addListener('create_overlay_request', this._handleCreateRequest)
+    Notification.addListener('create_overlay_request',this, this._handleCreateRequest.bind(this))
+    Notification.addListener('edit_overlay_request',this, this._handleEditRequest.bind(this))
+    Notification.addListener('dupliate_overlay_request',this, this._handleDuplicateRequest.bind(this))
+    Notification.addListener('delete_overlay_request',this, this._handleDeleteRequest.bind(this))
+    
   }
 
   componentWillUnmount() {
     AppState.removeEventListener('change', this._handleAppStateChange);
-    Notification.removeListener('create_overlay_request', this._handleCreateRequest)
+    Notification.removeListener('create_overlay_request', this)
+    Notification.removeListener('edit_overlay_request', this)
+    Notification.removeListener('dupliate_overlay_request', this)
+    Notification.removeListener('delete_overlay_request', this)
+  }
+
+  _handleDeleteRequest = (item) => {
+
+    ItemManager.sharedInstance().lock()
+
+    let self = this
+    let endCol = self.endColumn
+    let pc = endCol.panelController
+    pc.push({ 
+      ref: 'deletePanel',
+       el: <ConfirmPanel
+            key='deletePanel'
+            ref={comp => pc.refs['deletePanel'] = comp}
+            confirmText="Delete"
+            cancelText="cancel"
+            message={`Are you sure to delete item?`}
+            />
+    }, () => { // Fires after present create panel
+      endCol.moreButtonFadeOut()
+      ItemManager.sharedInstance().unlock()
+    }, (deletePanel) => { // Injector
+      deletePanel.onConfirm = () => {
+        self.week.deleteToDoItem(item).then(() => {
+          pc.popToRootPanel()
+          endCol.moreButtonFadeIn()
+          ItemManager.sharedInstance().reset()
+          self.forceUpdate()
+        })
+        CellSelectionController.sharedInstance().reset()
+      }
+
+      deletePanel.onCancel = () => {
+        ItemManager.sharedInstance().setSelectedItem(item)
+      }
+    })
+  }
+
+  _handleDuplicateRequest = (item) => {
+    let self = this
+
+    console.log('_handleDuplicateRequest')
+
+    // Show Create Modal
+    self.setState({ selectionMode: true, showCreateOverlay: false })
+    
+    let endCol = self.endColumn
+    let pc = endCol.panelController
+    pc.push({ 
+      ref: 'duplicatePanel',
+       el: <ConfirmPanel
+            key='duplicatePanel'
+            ref={comp => pc.refs['duplicatePanel'] = comp}
+            confirmText="Done"
+            cancelText="cancel"
+            message={`Choose cells where you want to copy to`}
+            enableConfirmButton={false}
+            />
+    }, () => { // Fires after present create panel
+      endCol.moreButtonFadeOut()
+    }, (duplicatePanel) => { // Injector
+
+      // For Cell Select Mode Validation
+      CellSelectionController.sharedInstance().addListener('change', duplicatePanel, (selectedCells) => {
+        console.log(`selected cells : ${selectedCells.length}`)
+        duplicatePanel.setState({enableConfirmButton: selectedCells.length > 0 ? true : false})
+      })
+      duplicatePanel.unmountHandler = (el) => {CellSelectionController.sharedInstance().removeListener('change', el)}
+
+      duplicatePanel.onConfirm = () => {
+        let cell_ids = CellSelectionController.sharedInstance().getSelectedCells()
+        self.week.addToDoItemsForCellIds(item, cell_ids).then(() => {
+          pc.popToRootPanel()
+          endCol.moreButtonFadeIn()
+          ItemManager.sharedInstance().reset()
+          self.setState({ showCreateOverlay: false, selectionMode: false })
+        })
+        CellSelectionController.sharedInstance().reset()
+      }
+
+      duplicatePanel.onCancel = () => {
+        ItemManager.sharedInstance().setSelectedItem(item)
+        self.setState({ showCreateOverlay: false, selectionMode: false })
+        CellSelectionController.sharedInstance().reset()
+      }
+    })
+  }
+
+  _handleEditRequest = (item) => {
+    let self = this
+
+    console.log('_handleEditRequest')
+
+    // Show Create Modal
+    self.setState({ showCreateOverlay: true })
+    
+    let endCol = self.endColumn
+    let pc = endCol.panelController
+    pc.push({ 
+      ref: 'editPanel',
+       el: <ConfirmPanel
+            key='editPanel'
+            ref={comp => pc.refs['editPanel'] = comp}
+            confirmText="Done"
+            cancelText="cancel"
+            message={`Create${'\n'}To-Do Item`}
+            />
+    }, () => { // Fires after present create panel
+      endCol.moreButtonFadeOut()
+    }, (editPanel) => { // Injector
+      editPanel.onConfirm = () => {
+
+        // Set value to item 
+        item.title = self.createModal.state.title,
+        item.note = self.createModal.state.note,
+
+        self.week.updateToDoItem(item).then(() => {
+          endCol.moreButtonFadeIn()
+
+          ItemManager.sharedInstance().setSelectedItem(item)
+
+          // Hide Close Overlay & Switch to cell select mode
+          self.setState({ showCreateOverlay: false, selectionMode: false })
+        }).catch((e) => {
+
+        })
+
+      }
+
+      editPanel.onCancel = () => {
+        // pc.popToRootPanel(() => {
+          
+        // })
+        // endCol.moreButtonFadeIn()
+        ItemManager.sharedInstance().setSelectedItem(item)
+        self.setState({ showCreateOverlay: false, selectionMode: false })
+      }
+    })
   }
 
   _handleCreateRequest = () => {
-    this.setState({ showCreateOverlay: true })
+
+    let self = this
 
     console.log('_handleCreateRequest')
+
+    // Show Create Modal
+    self.setState({ showCreateOverlay: true })
+
+    var newItem = null
     
-    let endCol = this.endColumn
+    let endCol = self.endColumn
     let pc = endCol.panelController
     pc.push({ 
       ref: 'createPanel',
@@ -72,11 +228,27 @@ export default class App extends Component {
             confirmText="Next"
             cancelText="cancel"
             message={`Create${'\n'}To-Do Item`}
+            enableConfirmButton={false}
             />
     }, () => { // Fires after present create panel
       endCol.moreButtonFadeOut()
-    }, (createIntance) => { // Injector
-      createIntance.onConfirm = () => {
+    }, (createPanel) => { // Injector
+
+      // For Create Modal Title Text Input Validation
+      Notification.addListener('title_text_input_change', createPanel, (text) => {
+        console.log(`received text: ${text}`)
+        createPanel.setState({enableConfirmButton: text ? true : false})
+      })
+      createPanel.unmountHandler = (el) => {Notification.removeListener('title_text_input_change', el)}
+
+      createPanel.onConfirm = () => {
+        // Create New Item Object
+        newItem = {
+          title: self.createModal.state.title,
+          note: self.createModal.state.note,
+          done: false
+        }
+
         // Present CellSelectConfirmPanel
         pc.push({ 
           ref: 'selectPanel',
@@ -86,36 +258,65 @@ export default class App extends Component {
                 confirmText="Done"
                 cancelText="cancel"
                 message={`Choose cells you want to place the To-Do item`}
+                enableConfirmButton={false}
                 />
         }, () => { // Fires after present select panel
           
-        }, (selectInstance) => { // Injector
-          selectInstance.onConfirm = () => {
-            pc.popToRootPanel(() => {
+        }, (selectPanel) => { // Injector
+
+          // For Cell Select Mode Validation
+          CellSelectionController.sharedInstance().addListener('change', selectPanel, (selectedCells) => {
+            console.log(`selected cells : ${selectedCells.length}`)
+            selectPanel.setState({enableConfirmButton: selectedCells.length > 0 ? true : false})
+          })
+          selectPanel.unmountHandler = (el) => {CellSelectionController.sharedInstance().removeListener('change', el)}
+
+          selectPanel.onConfirm = () => {
+            //
+            //
+            // CREATE ITEM AT CELLS
+            //
+            //
+            // Add item to week object
+
+            let cell_ids = CellSelectionController.sharedInstance().getSelectedCells()
+            self.week.addToDoItemsForCellIds(newItem, cell_ids).then(() => {
+              pc.popToRootPanel(() => {
+                
+              })
               endCol.moreButtonFadeIn()
+              ItemManager.sharedInstance().reset()
+              self.setState({ showCreateOverlay: false, selectionMode: false })
+              // self.forceUpdate()
+            }).catch((e) => {
+
             })
-            alert('created!')
-            this.setState({ showCreateOverlay: false, selectionMode: false })
+
+            CellSelectionController.sharedInstance().reset()
+
           }
 
-          selectInstance.onCancel = () => {
+          selectPanel.onCancel = () => {
             pc.popToRootPanel(() => {
-              endCol.moreButtonFadeIn()
+              
             })
-            this.setState({ showCreateOverlay: false, selectionMode: false })
+            endCol.moreButtonFadeIn()
+            self.setState({ showCreateOverlay: false, selectionMode: false })
+            CellSelectionController.sharedInstance().reset()
           }
         })
 
         // Hide Close Overlay & Switch to cell select mode
-        this.setState({ showCreateOverlay: false, selectionMode: true })
+        self.setState({ showCreateOverlay: false, selectionMode: true })
 
       }
 
-      createIntance.onCancel = () => {
+      createPanel.onCancel = () => {
         pc.popToRootPanel(() => {
-          endCol.moreButtonFadeIn()
+          
         })
-        this.setState({ showCreateOverlay: false, selectionMode: false })
+        endCol.moreButtonFadeIn()
+        self.setState({ showCreateOverlay: false, selectionMode: false })
       }
     })
   }
@@ -243,7 +444,7 @@ export default class App extends Component {
         {/* Overlay */}
         <Overlay pointerEvents="box-none" show={showCreateOverlay} delay={0}>
           <View pointerEvents="box-none" style={styles.createModal}>
-            {showCreateOverlay ? <CreateModal /> : undefined}
+            {showCreateOverlay ? <CreateModal item={ItemManager.sharedInstance().getSelectedItem()} ref={(ref) => {this.createModal = ref} } /> : undefined}
           </View>
         </Overlay>
       </View>

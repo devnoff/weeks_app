@@ -7,20 +7,24 @@ import {
   TouchableOpacity,
   Animated
 } from 'react-native';
-import SlideItem from './SlideItem'
+import FadeItem from './FadeItem'
 import Panel from './Panel'
 import CreateItemModal from './CreateItemModal'
 import Notification from '../manager/notification'
+import WeekManager from '../manager/week'
 
 export default class HelloPanel extends Panel {  
-  state = {
-    visible: false,
-    showModal: false,
-    fade: new Animated.Value(0),
-  }
 
   constructor(props) {
     super(props)
+
+    this.state = {
+      showModal: false,
+      show: true,
+      week_no: WeekManager.sharedInstance().getCurrentWeek().getWeekNumber(),
+      start_date_str: WeekManager.sharedInstance().getCurrentWeek().getStartDateStr(),
+      end_date_str: WeekManager.sharedInstance().getCurrentWeek().getEndDateStr()
+    }
   }
 
   showModal() {
@@ -31,40 +35,21 @@ export default class HelloPanel extends Panel {
     this.setState({showModal: false})
   }
 
+  show() {
+    this.setState({show: true})
+  }
+
+  hide() {
+    this.setState({show: false})
+  }
+
   _handlePressAddButton() {
     Notification.post('create_overlay_request')
   }
 
-  show() {
-    Animated.timing(
-      this.state.fade,
-      {
-        toValue: 1,                   
-        duration: 300,             
-      }
-    ).start(() => {
-      this.setState({ visible: true });
-      if (this.props.onFinishAnim)
-        this.props.onFinishAnim()
-    })
-  }
-
-  hide() {
-    Animated.timing(
-      this.state.fade,
-      {
-        toValue: 0,                   
-        duration: 200,             
-      }
-    ).start(() => {
-      this.setState({ visible: false });
-      if (this.props.onFinishAnim)
-        this.props.onFinishAnim()
-    })
-  }
-
-  componentDidUpdate() {
-    if (this.state.visible) {
+  checkComplete() {
+    if (this.state.show) {
+      // console.log('on show!')
       if (this.onShow) this.onShow()
     } else {
       if (this.onHide) this.onHide()
@@ -73,13 +58,20 @@ export default class HelloPanel extends Panel {
 
   render() {
 
-    const { show, showModal, fade } = this.state
+    const { show, showModal, fade, week_no, start_date_str, end_date_str } = this.state
 
     return (
-      <Animated.View pointerEvents="box-none" style={[styles.view, {opacity: fade}]}>
+      <FadeItem 
+        pointerEvents="box-none" style={[styles.view]}
+        ref={(item) => { this.item = item}}
+        onFinishAnim={this.checkComplete.bind(this)}
+        delay={0}
+        duration={300}
+        show={show}
+        >
         <View style={styles.weekView}>
-          <Text style={styles.weekText}>WEEK<Text style={styles.weekNum}>#1</Text></Text>
-          <Text style={styles.periodText}>1 Jan 2018{"\n"}~ 7 Jan 2018</Text>
+          <Text style={styles.weekText}>WEEK<Text style={styles.weekNum}>#{week_no}</Text></Text>
+          <Text style={styles.periodText}>{start_date_str}{"\n"}~ {end_date_str}</Text>
         </View>
         <View style={styles.buttonView}>
           <TouchableOpacity onPress={this._handlePressAddButton.bind(this)}>
@@ -98,7 +90,7 @@ export default class HelloPanel extends Panel {
           onRequestClose={() => this.hideModal()}
           supportedOrientations={['landscape']} /> : undefined)}
         
-      </Animated.View>
+      </FadeItem>
     );
   }
 }

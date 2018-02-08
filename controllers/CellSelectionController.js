@@ -1,6 +1,10 @@
+import _ from 'lodash'
 
 let __selectionInstance = null
-var _selectedCells = []
+var _selectedCells = new Set()
+let _listeners = {
+  change: []
+}
 
 export default class CellSelectionController {
 
@@ -18,26 +22,53 @@ export default class CellSelectionController {
   }
 
   addCellWithKey(key) {
-    _selectedCells.push(key)
+    _selectedCells.add(key)
+
+    let cbs = _listeners['change']
+    for (var i in cbs) {
+      let cb = cbs[i].callback
+      if (typeof cb === 'function') cb(this.getSelectedCells())
+    }
   }
 
   removeCellWithKey(key) {
+    _selectedCells.delete(key)
+
+    let cbs = _listeners['change']
+    for (var i in cbs) {
+      let cb = cbs[i].callback
+      if (typeof cb === 'function') cb(this.getSelectedCells())
+    }
+  }
+
+  getSelectedCells() {
+    return Array.from(_selectedCells)
+  }
+
+  contains(key) {
+    return _selectedCells.has(key)
+  }
+
+  reset() {
+    _selectedCells.clear()
+  }
+
+  addListener(key, owner, callback) {
+    if (typeof callback === 'function')
+      _listeners[key].push({owner, callback})
+  }
+
+  removeListener(key, owner) {
+    let cbs = _listeners[key]
     var idx = -1
-    for (var i in _selectedCells) {
-      if (_selectedCells[i] == key) {
+    for (var i in cbs) {
+      if (cbs[i].owner == owner) {
         idx = i
         break
       }
     }
-    if (idx > 0) 
-      _selectedCells.splice(idx, 1)
-  }
-
-  getSelectedCells() {
-    return _selectedCells
-  }
-
-  reset() {
-    _selectedCells = []
+    if (idx > -1) {
+      cbs.splice(idx, 1)
+    }
   }
 }

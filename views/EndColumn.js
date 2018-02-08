@@ -32,12 +32,19 @@ export default class EndColumn extends Component {
 
   componentDidMount() {
     this.panelController.initialize()
-    ItemManager.sharedInstance().addListener('change', this._handleItemSelectChangeEvent.bind(this))
+    ItemManager.sharedInstance().addListener('change', this, this._handleItemSelectChangeEvent.bind(this))
+  }
+
+  componentWillUnmount() {
+    ItemManager.sharedInstance().removeListener('change', this)
   }
 
   _handleItemSelectChangeEvent(selectedItem) {
     
+    if (ItemManager.sharedInstance().isLock() || this.panelController.isAnimating()) return
+    
     ItemManager.sharedInstance().lock()
+    console.log('locked!')
 
     if (selectedItem) {
       this.moreButtonFadeOut()
@@ -51,13 +58,15 @@ export default class EndColumn extends Component {
               />
       }, () => {
         ItemManager.sharedInstance().unlock()
+        console.log('unlocked!')
       }, (el) => {
         el.week = this.props.week
       })
     } else {
-      this.panelController.dismiss(() => {
+      this.panelController.popToRootPanel(() => {
         this.moreButtonFadeIn()
         ItemManager.sharedInstance().unlock()
+        console.log('unlocked!')
       })
     }
   }
@@ -67,11 +76,12 @@ export default class EndColumn extends Component {
       this.state.moreAlpha,
       {
         toValue: 0,                   
-        duration: 100,             
+        duration: 150,             
       }
     ).start(() => {
       if (callback) callback()
     })
+    this.setState({showMore: false})
   }
 
   moreButtonFadeIn(callback) {
@@ -79,16 +89,19 @@ export default class EndColumn extends Component {
       this.state.moreAlpha,
       {
         toValue: 1,                   
-        duration: 100,             
+        duration: 150,             
       }
     ).start(() => {
       if (callback) callback()
     })
+
+    this.setState({showMore: true})
   }
 
   _onPressMoreButton() {
 
     if (this.panelController.isAnimating()) return
+    ItemManager.sharedInstance().lock()
 
     this.moreButtonFadeOut()
 
@@ -103,14 +116,15 @@ export default class EndColumn extends Component {
               />
       }, () => {
         this.moreButtonFadeIn()
+        ItemManager.sharedInstance().unlock()
       })
+      
     } else {
       this.panelController.pop(() => {
         this.moreButtonFadeIn()
+        ItemManager.sharedInstance().unlock()
       })
     }
-
-    this.setState({showMore: !this.state.showMore})
   }
 
   _getMoreEl() {
@@ -128,7 +142,7 @@ export default class EndColumn extends Component {
       <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png') : null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex:1, backgroundColor: '#eee'}}>
         <View style={styles.view}>
           <View style={styles.moreView}>
-            <TouchableOpacity onPress={this._onPressMoreButton.bind(this)}>
+            <TouchableOpacity disabled={!showMore} onPress={this._onPressMoreButton.bind(this)}>
               <Animated.View style={[styles.moreBox, {opacity: moreAlpha}]}>
                 {this._getMoreEl()}
               </Animated.View>

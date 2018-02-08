@@ -8,14 +8,24 @@ import SlideItem from './SlideItem'
 import FadeItem from './FadeItem'
 import ScaleItem from './ScaleItem'
 import Bounceable from './bouncable'
-
+import CellSelectionController from '../controllers/CellSelectionController'
 
 export default class SelectionColumn extends Component {
 
   constructor(props) {
     super(props)
 
+  }
 
+  _onPressCell(cell_id) {
+    console.log(`pressed ${cell_id}`)
+    let csc = CellSelectionController.sharedInstance()
+    if (csc.contains(cell_id))
+      csc.removeCellWithKey(cell_id)
+    else
+      csc.addCellWithKey(cell_id)
+      
+    this.forceUpdate()
   }
 
   _getCell(day, order) {
@@ -24,10 +34,13 @@ export default class SelectionColumn extends Component {
 
     let cell_id = `${day}_${column}`
 
+    let selected = CellSelectionController.sharedInstance().contains(cell_id)
+
     return (<ScaleItem style={[styles.view]} delay={order * 100}>
                 <View style={styles.cell}>
-                  <Bounceable onPress={() => {}} style={{flex: 1}} key={cell_id}>
+                  <Bounceable onPress={this._onPressCell.bind(this, cell_id)} style={{flex: 1}} key={cell_id}>
                     <View style={styles.box}>
+                    {selected ? <Icon color="#999" size={30} name="check" /> : undefined}
                     </View>
                   </Bounceable>
                 </View>
@@ -39,7 +52,7 @@ export default class SelectionColumn extends Component {
     const { icon } = this.props
 
     return (
-      <View style={{flex: 1, alignItems: 'center', backgroundColor: '#f6f8f1'}}>
+      <View style={{flex: 1, alignItems: 'center'}}>
         <View style={styles.headerCell}>{icon}</View>
         {this._getCell('mon',0)}
         {this._getCell('tue',1)}
@@ -80,5 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#aaaaaa11',
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });

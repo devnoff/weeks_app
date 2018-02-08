@@ -5,13 +5,14 @@ import {
 
 export default class SlideItem extends Component {
 
+  visible = false
+
   constructor(props) {
     super(props)
 
     this.state = {
       x: new Animated.Value(props.show ? props.to : props.x),
-      fade: new Animated.Value(props.fade ? props.fade : 0),
-      visible: false
+      fade: new Animated.Value(props.fade ? props.fade : 0)
     }
   }
 
@@ -33,6 +34,7 @@ export default class SlideItem extends Component {
     * option - slideTo, delay
     */
   show(option) {
+    let self = this
     Animated.sequence([
       Animated.delay(option.delay), // Option
       Animated.parallel([
@@ -48,17 +50,22 @@ export default class SlideItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: true
-      });
+    ]).start((info) => {
+
+      if (!info.finished) {
+        console.log('complete while animating')
+        return
+      }
+
+      self.visible = true
   
-      if (this.props.onFinishAnim)
-        this.props.onFinishAnim()
+      if (self.props.onFinishAnim)
+        self.props.onFinishAnim()
     })
   }
 
   hide(option) {
+    let self = this
     Animated.sequence([
       Animated.delay(option.delay), // Option
       Animated.parallel([
@@ -74,18 +81,22 @@ export default class SlideItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: false
-      });
+    ]).start((info) => {
+
+      if (!info.finished) {
+        // console.log('complete while animating')
+        return
+      }
+
+      self.visible = false
       
-      if (this.props.onFinishAnim)
-        this.props.onFinishAnim()
+      if (self.props.onFinishAnim)
+        self.props.onFinishAnim()
     })
   }
 
   render() {
-    let { fade, x, visible } = this.state;
+    let { fade, x } = this.state;
 
     return (
       <Animated.View

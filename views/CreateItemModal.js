@@ -6,6 +6,7 @@ Modal, View, Text, StyleSheet, Button, TouchableOpacity, TextInput,
 ImageBackground, Platform, TouchableWithoutFeedback
 } from 'react-native';
 import FadeItem from './FadeItem'
+import Notification from '../manager/notification';
 
 export default class CreateItemModal extends Component {
 
@@ -15,8 +16,9 @@ export default class CreateItemModal extends Component {
     super(props)
 
     this.state = {
-      title: null,
-      note: null,
+      description: props.description ? props.description : 'Create To-Do Item',
+      title: props.item ? props.item.title : null,
+      note: props.item ? props.item.note : null,
       show: false
     }
   }
@@ -48,22 +50,21 @@ export default class CreateItemModal extends Component {
     this.setState(nextProps)
   }
 
-  _onPressClose() {
-    const { onRequestClose } = this.props
-    if (onRequestClose) onRequestClose()
-  }
-
-  _onPressDone() {
-    const { onRequestDone } = this.props
-    if (onRequestDone) onRequestDone()
-  }
-
   _onPressLeft() {
     this.titleInput.focus()
   }
 
   _onPressRight() {
     this.noteInput.focus()
+  }
+
+  _validate() {
+    if (!this.state.title) {
+
+      return false
+    }
+
+    return true
   }
 
   render() {
@@ -76,14 +77,6 @@ export default class CreateItemModal extends Component {
         >
         <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex: 1, backgroundColor: '#f6f8f1'}}>
         <View style={styles.top} >
-          {/* <View style={styles.navigation}>
-            <TouchableOpacity onPress={this._onPressClose.bind(this)} style={styles.navigationItem}>
-              <Icon name="close" size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={this._onPressDone.bind(this)} style={styles.navigationItem}>
-              <Text style={{fontWeight: 'bold', fontSize: 15,fontFamily: 'courier'}}>Done</Text>
-            </TouchableOpacity>
-          </View> */}
           <View style={styles.body}>
             <TouchableWithoutFeedback onPress={this._onPressLeft.bind(this)}>
               <View style={styles.titleView}>
@@ -92,7 +85,11 @@ export default class CreateItemModal extends Component {
                   isFocused={true}
                   style={styles.titleInput}
                   placeholder="Title"
-                  onChangeText={(title) => this.setState({title})}
+                  onChangeText={(title) => {
+                    this.setState({title})
+                    Notification.post('title_text_input_change', title)
+                  }}
+                  value={this.state.title}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -104,6 +101,7 @@ export default class CreateItemModal extends Component {
                 multiline={true}
                 placeholder="Note"
                 onChangeText={(note) => this.setState({note})}
+                value={this.state.note}
               />
             </View>
             </TouchableWithoutFeedback>
@@ -152,13 +150,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   titleView: {
-    flex: 1
+    flex: 1,
+    marginLeft: 10
   },
   noteView: {
     flex: 1,
     paddingLeft: 20,
     borderLeftWidth: 1,
-    borderLeftColor: '#eee'
+    borderLeftColor: '#ddd'
   },
   titleInput: {
     fontSize: 20

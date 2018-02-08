@@ -47,6 +47,10 @@ export default class MorePanel extends Panel {
   _onPressImportButton() {
     this.setState({disabled: true})
 
+    // Check weather To-do Items exist in current week
+    // 1. if exists shows alert panel
+    // 2. if no shows confirm panel
+
     let panelController = this.getPanelController()
     panelController.push({ 
       ref: 'importConfirmPanel',
@@ -81,11 +85,11 @@ export default class MorePanel extends Panel {
 
       let item = items[i]
 
-      if (this.state.show && !item.state.visible) {
+      if (this.state.show && !item.visible) {
         done = false
       }
 
-      if (!this.state.show && item.state.visible) {
+      if (!this.state.show && item.visible) {
         done = false
       }
     }

@@ -24,6 +24,16 @@ export default class PanelController {
     this.isAnimating = () => {
       return _animating
     }
+
+    this.getCurrentPanel = () => {
+      return this._lastChild()
+    }
+
+    this.getCurrentPanelEl = () => {
+      let last = this._lastChild()
+      let el = this.refs[last.ref]
+      return el
+    }
   }
 
   initialize() {
@@ -54,10 +64,10 @@ export default class PanelController {
           let el = this.refs[last.ref]
           el.onShow = () => {
             _animating = false
+
+            if (callback) callback()
           }
           el.show()
-
-          if (callback) callback()
         })
       }
 
@@ -83,15 +93,15 @@ export default class PanelController {
       // Animate show child view through force update parent
       _parentView.forceUpdate(() => {
         let el = this.refs[last.ref]
-        console.log(last)
+        // console.log(last)
         if (inject) inject(el) // Injector
         el.setPanelController(this)
         el.onShow = () => {
           _animating = false
+
+          if (callback) callback()
         }
         el.show()
-
-        if (callback) callback()
       })
     }
 
@@ -134,10 +144,10 @@ export default class PanelController {
           let el = this.refs[last.ref]
           el.onShow = () => {
             _animating = false
+
+            if (callback) callback()
           }
           el.show()
-
-          if (callback) callback()
         })
       }
       this.refs[last.ref].hide()
@@ -165,10 +175,13 @@ export default class PanelController {
         el.setPanelController(this)
         el.onShow = () => {
           _animating = false
+
+          if (callback) callback()
+
+          console.log('On show :')
+          console.log(childInfo)
         }
         el.show()
-
-        if (callback) callback()
       })
     }
 

@@ -17,9 +17,25 @@ export default class ConfirmPanel extends Panel {
       show: false,
       confirmText: props.confirmText || 'Confirm', 
       cancelText: props.cancelText || undefined,
-      message: props.message || undefined
+      message: props.message || undefined,
+      disabled: false,
+      enableConfirmButton: props.enableConfirmButton == undefined ? true : props.enableConfirmButton
     }
 
+  }
+
+  componentDidMount() {
+    if (this.mountHandler) {
+      this.mountHandler(this)
+      console.log('fired mount handler')
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.unmountHandler) {
+      this.unmountHandler(this)
+      console.log('fired unmount handler')
+    }
   }
 
   show() {
@@ -31,11 +47,15 @@ export default class ConfirmPanel extends Panel {
   }
 
   _onPressConfirmButton() {
+    this.setState({disabled: true})
+
     if (this.onConfirm && typeof this.onConfirm == 'function')
       this.onConfirm()
   }
 
   _onPressCancelButton() {
+    this.setState({disabled: true})
+
     if (this.onCancel && typeof this.onCancel == 'function')
       this.onCancel()
   }
@@ -59,11 +79,11 @@ export default class ConfirmPanel extends Panel {
 
       let item = items[i]
 
-      if (this.state.show && !item.state.visible) {
+      if (this.state.show && !item.visible) {
         done = false
       }
 
-      if (!this.state.show && item.state.visible) {
+      if (!this.state.show && item.visible) {
         done = false
       }
     }
@@ -80,7 +100,7 @@ export default class ConfirmPanel extends Panel {
 
   render() {
 
-    const { show, confirmText, cancelText, message } = this.state
+    const { show, confirmText, cancelText, message, disabled, enableConfirmButton } = this.state
 
     return (
       <View pointerEvents="box-none" style={styles.view}>
@@ -107,8 +127,8 @@ export default class ConfirmPanel extends Panel {
           delay={150} 
           to={10} 
           show={show} >
-          <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
-            <Text style={styles.title}>
+          <TouchableOpacity disabled={disabled || !enableConfirmButton} onPress={this._onPressConfirmButton.bind(this)}>
+            <Text style={[styles.title, !enableConfirmButton ? styles.disabled : undefined]}>
               {confirmText}
             </Text>
           </TouchableOpacity>
@@ -122,7 +142,7 @@ export default class ConfirmPanel extends Panel {
             delay={200} 
             to={10} 
             show={show} >
-            <TouchableOpacity onPress={this._onPressCancelButton.bind(this)}>
+            <TouchableOpacity disabled={disabled} onPress={this._onPressCancelButton.bind(this)}>
               <Text style={styles.title}>
                 {cancelText}
               </Text>
@@ -160,5 +180,8 @@ const styles = StyleSheet.create({
   },
   extraSpace: {
 
+  },
+  disabled: {
+    color: '#aaa'
   }
 })

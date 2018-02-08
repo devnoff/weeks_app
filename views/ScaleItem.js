@@ -5,12 +5,13 @@ import {
 
 export default class ScaleItem extends Component {
 
+  visible = false
+
   constructor(props) {
     super(props)
 
     this.state = {
-      scale: new Animated.Value(0),
-      visible: false
+      scale: new Animated.Value(0)
     }
   }
 
@@ -43,10 +44,14 @@ export default class ScaleItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: true
-      });
+    ]).start((info) => {
+
+      if (!info.finished) {
+        // console.log('complete while animating')
+        return
+      }
+
+      this.visible = true
   
       if (this.props.onFinishAnim)
         this.props.onFinishAnim()
@@ -65,10 +70,14 @@ export default class ScaleItem extends Component {
           }
         )
       ])
-    ]).start(() => {
-      this.setState({
-        visible: false
-      });
+    ]).start((info) => {
+
+      if (!info.finished) {
+        console.log('complete while animating')
+        return
+      }
+
+      this.visible = false
       
       if (this.props.onFinishAnim)
         this.props.onFinishAnim()
@@ -76,7 +85,7 @@ export default class ScaleItem extends Component {
   }
 
   render() {
-    let { scale, visible } = this.state;
+    let { scale } = this.state;
 
     return (
       <Animated.View
