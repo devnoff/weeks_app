@@ -65,7 +65,7 @@ export default class PanelController {
           el.onShow = () => {
             _animating = false
 
-            if (callback) callback()
+            if (callback) callback(true)
           }
           el.show()
         })
@@ -73,6 +73,8 @@ export default class PanelController {
 
       // 1.
       this.refs[last.ref].hide()
+    } else {
+      callback(false)
     }
   }
 

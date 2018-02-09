@@ -4,7 +4,7 @@ var _lock = false
 export default class ItemManager {
 
   _selectedItem = null
-  _listeners = {change:[], update: []}
+  _listeners = {change:[], update: [], updateLayout:[]}
   
   constructor() {
     if (__instance) throw Error('Shared instance already exists')
@@ -81,7 +81,15 @@ export default class ItemManager {
     }
   }
 
+  needUpdateSelectedItemLayout() {
+    let l = this._listeners.updateLayout
+    for (var i in l) {
+      let cb = l[i].fn
+      if (typeof cb === 'function') cb(this._selectedItem)
+    }
+  }
+
   reset() {
-    _selectedItem = null
+    this._selectedItem = null
   }
 }

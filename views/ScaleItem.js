@@ -11,12 +11,13 @@ export default class ScaleItem extends Component {
     super(props)
 
     this.state = {
-      scale: new Animated.Value(0)
+      scale: new Animated.Value( props.scale || 0)
     }
   }
 
   componentDidMount() {
-    this.show({ delay: this.props.delay})
+    if (this.props.scale < 1)
+      this.show({ delay: this.props.delay})
   }
 
   componentWillReceiveProps(nextProps) {

@@ -1,11 +1,126 @@
 import { isIphoneX } from 'react-native-iphone-x-helper'
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback'
 import React, { Component } from 'react';
 import {
-  View, StyleSheet, VirtualizedList, Text, TouchableOpacity, Animated, TouchableWithoutFeedback
+  View, StyleSheet, VirtualizedList, Text, TouchableOpacity, Animated, TouchableWithoutFeedback,
+  Dimensions, Platform, Easing
 } from 'react-native';
 import WeekModel from '../models/week'
 import ItemManager from '../manager/item'
 import FadeItem from './FadeItem'
+import ScaleItem from './ScaleItem'
+import _ from 'lodash'
+import SortableList from 'react-native-sortable-list'
+
+const window = Dimensions.get('window')
+
+class Item extends Component {
+
+  state = {
+    selectedItemKey: null
+  }
+
+  _nextOrder = []
+
+  constructor(props) {
+    super(props)
+
+    this._active = new Animated.Value(0)
+
+    this._style = {
+      ...Platform.select({
+        ios: {
+          transform: [{
+            scale: this._active.interpolate({
+              inputRange: [0, 1],
+              outputRange: [1, 1.1],
+            }),
+          }],
+          shadowRadius: this._active.interpolate({
+            inputRange: [0, 1],
+            outputRange: [2, 10],
+          }),
+        },
+
+        android: {
+          transform: [{
+            scale: this._active.interpolate({
+              inputRange: [0, 1],
+              outputRange: [1, 1.07],
+            }),
+          }],
+          elevation: this._active.interpolate({
+            inputRange: [0, 1],
+            outputRange: [2, 6],
+          }),
+        },
+      })
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.active !== nextProps.active) {
+      Animated.timing(this._active, {
+        duration: 300,
+        easing: Easing.bounce,
+        toValue: Number(nextProps.active),
+      }).start()
+    }
+
+    if (nextProps.hasOwnProperty('selectedItemKey'))
+      this.setState({selectedItemKey: nextProps.selectedItemKey})
+  
+  }
+
+  render() {
+   const {day, column, data, week, onPress} = this.props
+   const {selectedItemKey} = this.state
+
+    return (
+      <Animated.View style={[
+        // styles.item,
+        this._style,
+      ]}>
+        {function() {
+          let item = data
+          let itemStyle = [styles.item]
+          if (item.key == selectedItemKey) itemStyle.push(styles.itemActive)
+
+          let textStyle = [styles.itemText]
+          if (item.key == selectedItemKey) textStyle.push(styles.itemTextActive)
+
+          else if (item.done) {
+            itemStyle.push(styles.itemFill)
+            textStyle.push(styles.itemTextFill)
+          }
+
+          if (item.done) {
+            textStyle.push(styles.itemTextDone)
+          }
+
+          // console.log(`item key : ${item.key} column: ${column} day: ${day} index: ${index} title: ${item.title}`)
+          let bounce = week.lastHandledItemsSet().has(item.key)
+          if (bounce) week.lastHandledItemsSet().delete(item.key)
+
+          let note = item.note ? item.note.split('\n')[0] : undefined
+
+          let el = (
+            <View style={styles.itemBox}>
+              <View>
+                <View style={itemStyle}>
+                  <Text style={textStyle}>{item.title}</Text>
+                  {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
+                </View>
+              </View>
+            </View>
+          )
+          return <ScaleItem scale={bounce ? 0 : 1} delay={500}>{el}</ScaleItem>;
+        }.bind(this)()}
+        
+      </Animated.View>
+    );
+  }
+}
 
 
 class DynamicRow extends Component {
@@ -36,6 +151,8 @@ class DynamicRow extends Component {
 
 export default class TodoColumn extends Component {
 
+  _data = null
+
   constructor(props) {
     super(props)
 
@@ -43,7 +160,6 @@ export default class TodoColumn extends Component {
     let column = props.column
 
     this.state = {
-      data: null,
       column: column,
       selectedItemKey: null,
       show: true
@@ -57,12 +173,7 @@ export default class TodoColumn extends Component {
       this.hide()
     }
 
-    let week = this.props.week
-    week.getWeekDataAtColumn(this.props.column, (data) => {
-      this.setState({
-        data: data
-      })
-    })
+    this.loadData()
   }
 
   show() {
@@ -73,6 +184,13 @@ export default class TodoColumn extends Component {
     this.setState({show: false})
   }
 
+  loadData() {
+    let week = this.props.week
+    week.getWeekDataAtColumn(this.props.column, (data) => {
+      this._data = data
+    })
+  }
+
   componentDidMount() {
     ItemManager.sharedInstance().addListener('change', this, this._handleItemsSelectionChange.bind(this))
     ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
@@ -80,8 +198,8 @@ export default class TodoColumn extends Component {
 
     let week = this.props.week
     week.getWeekDataAtColumn(this.props.column, (data) => {
+      this._data = data
       this.setState({
-        data: data,
         selectedItemKey: selectedItem ? selectedItem.key : null
       })
     })
@@ -104,13 +222,21 @@ export default class TodoColumn extends Component {
     })
   }
 
-  _onPressItem(item, el) {
+  _onPressItem(day, column, index) {
 
-    console.log(`Pressed item ${item.key}`)
+    console.log(`Pressed item ${index}`)
+
+    ReactNativeHapticFeedback.trigger('impactLight')
     
     let itemManager = ItemManager.sharedInstance()
-
     if (itemManager.isLock()) return
+
+    let data = this._data
+
+    // let arr = key.split('_')
+    // let day = arr[0]
+    // let index = arr[2]
+    let item = data[day][index]
 
     let curr = itemManager.getSelectedItem()
     if (curr && curr.key == item.key) {
@@ -121,12 +247,65 @@ export default class TodoColumn extends Component {
     }
   }
 
+  _updateCellData(day, cellData) {
+    this._data[day] = cellData
+  }
+
   _getCellForDay(day) {
-    const { data, column, selectedItemKey } = this.state
-    let items = data ? data[day] : [] || []
+    const { column, selectedItemKey } = this.state
+    let items = this._data ? this._data[day] : [] || []
     return (
       <View  style={styles.todoCell}>
-        <VirtualizedList 
+        {items.length > 0 ? 
+          <SortableList
+            horizontal
+            style={styles.list}
+            contentContainerStyle={styles.contentContainer}
+            data={function() {
+              var d = {}
+              for (var i in items) {
+                let item = items[i]
+                d[i] = item
+              }
+              return d
+            }.bind(this)()}
+            onChangeOrder={(nextOrderkeys) => {
+              this._nextOrder = nextOrderkeys
+            }}
+            onReleaseRow={() => {
+              if (this._nextOrder) {
+                console.log(this._nextOrder)
+                var nextoOrderedItems = []
+                for (var i in this._nextOrder) {
+                  var item = items[this._nextOrder[i]]
+                  item.key = `${day}_${column}_${i}`
+                  nextoOrderedItems.push(item)
+                }
+
+                let week = this.props.week
+                let cell_id = `${day}_${column}`
+                week.updateOrder(cell_id, nextoOrderedItems).then((newOrderedItems)=>{
+                  // this._updateCellData(day, newOrderedItems)
+                })
+              }
+            }}
+            onPressRow={this._onPressItem.bind(this,day, column)}
+            onActivateRow={() => {
+              ReactNativeHapticFeedback.trigger('impactLight')
+              ItemManager.sharedInstance().setSelectedItem(null)
+            }}
+            renderRow={({data, active}) =>
+              <Item data={data} 
+                    active={active} 
+                    selectedItemKey={selectedItemKey} 
+                    week={this.props.week}
+                    day={day}
+                    column={column}
+              />
+            }
+            />
+          : undefined }
+        {/* <VirtualizedList 
           showsHorizontalScrollIndicator={false}
           data={items}
           horizontal={true}
@@ -154,19 +333,31 @@ export default class TodoColumn extends Component {
             }
 
             // console.log(`item key : ${item.key} column: ${column} day: ${day} index: ${index} title: ${item.title}`)
+            let bounce = this.props.week.lastHandledItemsSet().has(item.key)
+            if (bounce) this.props.week.lastHandledItemsSet().delete(item.key)
 
-            return (
+            if (day == 'fri' && column == 1) {
+              console.log('bounce : ' + bounce)
+              console.log(this.props.week.lastHandledItemsSet())
+              console.log(item.key)
+            }
+
+            let note = item.note ? item.note.split('\n')[0] : undefined
+
+            let el = (
               <View style={styles.itemBox}>
                 <TouchableOpacity onPress={this._onPressItem.bind(this, item)}>
                   <DynamicRow style={itemStyle}>
                     <Text style={textStyle}>{item.title}</Text>
-                    {item.note ? <Text style={{fontSize:9, color:'#aaa'}}>{item.note}</Text> : undefined}
+                    {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
                   </DynamicRow>
                 </TouchableOpacity>
               </View>
-            );
+            )
+
+            return <ScaleItem scale={bounce ? 0 : 1} delay={500}>{el}</ScaleItem>;
           }}
-        />
+        /> */}
       </View>
     )
   }
@@ -244,6 +435,24 @@ const styles = StyleSheet.create({
   },
   listStyle: {
 
+  },
+  list: {
+    marginTop: 6,
+    flex: 1,
+  },
+  contentContainer: {
+
+    ...Platform.select({
+      ios: {
+        paddingHorizontal: 0,
+        paddingRight: 6
+      },
+
+      android: {
+        paddingHorizontal: 0,
+        paddingRight: 6
+      }
+    })
   },
   itemBox: {
     flex: 1,

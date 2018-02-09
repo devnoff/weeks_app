@@ -1,4 +1,5 @@
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback'
 import React, { Component } from 'react';
 import {
   View,
@@ -44,6 +45,7 @@ export default class HelloPanel extends Panel {
   }
 
   _handlePressAddButton() {
+    ReactNativeHapticFeedback.trigger('impactLight')
     Notification.post('create_overlay_request')
   }
 

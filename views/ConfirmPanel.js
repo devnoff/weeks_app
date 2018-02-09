@@ -1,3 +1,4 @@
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback'
 import React, { Component } from 'react';
 import {
   View,
@@ -51,6 +52,8 @@ export default class ConfirmPanel extends Panel {
 
     if (this.onConfirm && typeof this.onConfirm == 'function')
       this.onConfirm()
+
+    ReactNativeHapticFeedback.trigger('impactLight')
   }
 
   _onPressCancelButton() {

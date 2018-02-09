@@ -1,4 +1,5 @@
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback'
 import React, { Component } from 'react';
 import {
   View,
@@ -50,6 +51,12 @@ export default class ItemPanel extends Panel {
     let week = WeekManager.sharedInstance().getCurrentWeek()
     let todoItem = this.state.todoItem
     todoItem.done = !todoItem.done
+
+    if (todoItem.done) 
+      ReactNativeHapticFeedback.trigger('notificationSuccess')
+    else 
+      ReactNativeHapticFeedback.trigger('impactLight')
+
     try {
       await week.updateToDoItem(todoItem)
       this.setState({

@@ -1,4 +1,5 @@
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback'
 import { isIphoneX } from 'react-native-iphone-x-helper'
 import React, { Component } from 'react';
 import {
@@ -26,6 +27,8 @@ export default class SelectionColumn extends Component {
       csc.addCellWithKey(cell_id)
       
     this.forceUpdate()
+
+    ReactNativeHapticFeedback.trigger()
   }
 
   _getCell(day, order) {
@@ -36,7 +39,7 @@ export default class SelectionColumn extends Component {
 
     let selected = CellSelectionController.sharedInstance().contains(cell_id)
 
-    return (<ScaleItem style={[styles.view]} delay={order * 100}>
+    return (<ScaleItem scale={0} style={[styles.view]} delay={order * 100}>
                 <View style={styles.cell}>
                   <Bounceable onPress={this._onPressCell.bind(this, cell_id)} style={{flex: 1}} key={cell_id}>
                     <View style={styles.box}>

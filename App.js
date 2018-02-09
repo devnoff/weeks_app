@@ -70,39 +70,52 @@ export default class App extends Component {
   }
 
   _handleDeleteRequest = (item) => {
-
     ItemManager.sharedInstance().lock()
 
-    let self = this
-    let endCol = self.endColumn
+    let endCol = this.endColumn
     let pc = endCol.panelController
-    pc.push({ 
-      ref: 'deletePanel',
-       el: <ConfirmPanel
-            key='deletePanel'
-            ref={comp => pc.refs['deletePanel'] = comp}
-            confirmText="Delete"
-            cancelText="cancel"
-            message={`Are you sure to delete item?`}
-            />
-    }, () => { // Fires after present create panel
-      endCol.moreButtonFadeOut()
-      ItemManager.sharedInstance().unlock()
-    }, (deletePanel) => { // Injector
-      deletePanel.onConfirm = () => {
-        self.week.deleteToDoItem(item).then(() => {
-          pc.popToRootPanel()
-          endCol.moreButtonFadeIn()
-          ItemManager.sharedInstance().reset()
-          self.forceUpdate()
-        })
-        CellSelectionController.sharedInstance().reset()
-      }
-
-      deletePanel.onCancel = () => {
-        ItemManager.sharedInstance().setSelectedItem(item)
-      }
+    this.week.deleteToDoItem(item).then(() => {
+      pc.popToRootPanel(() => {
+        endCol.moreButtonFadeIn()
+        ItemManager.sharedInstance().unlock()
+        ItemManager.sharedInstance().setSelectedItem(null)
+      })
+      this.forceUpdate()
     })
+    CellSelectionController.sharedInstance().reset()
+
+    // ItemManager.sharedInstance().lock()
+
+    // let self = this
+    // let endCol = self.endColumn
+    // let pc = endCol.panelController
+    // pc.push({ 
+    //   ref: 'deletePanel',
+    //    el: <ConfirmPanel
+    //         key='deletePanel'
+    //         ref={comp => pc.refs['deletePanel'] = comp}
+    //         confirmText="Delete"
+    //         cancelText="cancel"
+    //         message={`Are you sure to delete item?`}
+    //         />
+    // }, () => { // Fires after present create panel
+    //   endCol.moreButtonFadeOut()
+    //   ItemManager.sharedInstance().unlock()
+    // }, (deletePanel) => { // Injector
+    //   deletePanel.onConfirm = () => {
+    //     self.week.deleteToDoItem(item).then(() => {
+    //       pc.popToRootPanel()
+    //       endCol.moreButtonFadeIn()
+    //       ItemManager.sharedInstance().reset()
+    //       self.forceUpdate()
+    //     })
+    //     CellSelectionController.sharedInstance().reset()
+    //   }
+
+    //   deletePanel.onCancel = () => {
+    //     ItemManager.sharedInstance().setSelectedItem(item)
+    //   }
+    // })
   }
 
   _handleDuplicateRequest = (item) => {
@@ -141,7 +154,7 @@ export default class App extends Component {
         self.week.addToDoItemsForCellIds(item, cell_ids).then(() => {
           pc.popToRootPanel()
           endCol.moreButtonFadeIn()
-          ItemManager.sharedInstance().reset()
+          ItemManager.sharedInstance().setSelectedItem(null)
           self.setState({ showCreateOverlay: false, selectionMode: false })
         })
         CellSelectionController.sharedInstance().reset()
@@ -161,7 +174,7 @@ export default class App extends Component {
     console.log('_handleEditRequest')
 
     // Show Create Modal
-    self.setState({ showCreateOverlay: true })
+    self.setState({ showCreateOverlay: true, selectionMode: false })
     
     let endCol = self.endColumn
     let pc = endCol.panelController
@@ -186,9 +199,11 @@ export default class App extends Component {
         self.week.updateToDoItem(item).then(() => {
           endCol.moreButtonFadeIn()
 
+          ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
           ItemManager.sharedInstance().setSelectedItem(item)
 
           // Hide Close Overlay & Switch to cell select mode
+          self.forceUpdate()
           self.setState({ showCreateOverlay: false, selectionMode: false })
         }).catch((e) => {
 
@@ -297,9 +312,7 @@ export default class App extends Component {
           }
 
           selectPanel.onCancel = () => {
-            pc.popToRootPanel(() => {
-              
-            })
+            pc.popToRootPanel()
             endCol.moreButtonFadeIn()
             self.setState({ showCreateOverlay: false, selectionMode: false })
             CellSelectionController.sharedInstance().reset()
@@ -312,9 +325,7 @@ export default class App extends Component {
       }
 
       createPanel.onCancel = () => {
-        pc.popToRootPanel(() => {
-          
-        })
+        pc.popToRootPanel()
         endCol.moreButtonFadeIn()
         self.setState({ showCreateOverlay: false, selectionMode: false })
       }

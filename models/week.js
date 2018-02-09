@@ -8,6 +8,7 @@ var _week_id = null
 var _date_start = null // moment obj
 var _date_end = null
 var _data = null
+var _lastHandledItems = new Set()
 
 export default class WeekModel {
 
@@ -49,6 +50,10 @@ export default class WeekModel {
 
     this.getEndDateStr = () => {
       return _date_end.format('D MMM YYYY')
+    }
+
+    this.lastHandledItemsSet = () => {
+      return _lastHandledItems
     }
   }
 
@@ -94,9 +99,10 @@ export default class WeekModel {
   }
 
   addToDoItemsForCellIds(newItem, cell_ids) {
-    console.log(cell_ids)
+    // console.log(cell_ids)
+    let newItems = new Set()
     return new Promise((resolve, reject) => {
-      console.log('addToDoItemsForCellIds')
+      // console.log('addToDoItemsForCellIds')
       try {
         for (var i in cell_ids) {
           var item = JSON.parse(JSON.stringify(newItem))
@@ -107,8 +113,10 @@ export default class WeekModel {
           var key = `${day}_${column}_${cell.length}`
           item.key = key
           cell.push(item)
+          newItems.add(key)
         }
         DataManager.setWeekDataForKey(_week_id, _data)
+        _lastHandledItems = newItems
         resolve()
       } catch (e) {
         reject(e)
@@ -153,6 +161,12 @@ export default class WeekModel {
       let cell = _data.to_do[day][column]
       if (cell.length <= index) return reject({message:'request index is out of bounds'})
       cell.splice(index, 1)
+
+      // re-arrange
+      for (var i in cell) {
+        let itm = cell[i]
+        itm.key = `${day}_${column}_${i}`
+      }
       try {
         DataManager.setWeekDataForKey(_week_id, _data)
         resolve()
@@ -189,6 +203,7 @@ export default class WeekModel {
       cell[index] = item
       try {
         DataManager.setWeekDataForKey(_week_id, _data)
+        _lastHandledItems = new Set([item.key])
         resolve()
       } catch (e) {
         reject(e)
@@ -196,6 +211,34 @@ export default class WeekModel {
     })
   }
 
+  async updateOrder(cell_id, items) {
+    let arr = cell_id.split('_')
+    let day = arr[0]
+    let column = arr[1]
+    var newCell = []
+    console.log(items)
+    for (var i in items) {
+      let item = items[i]
+      newCell.push(item)
+    }
+    return new Promise((resolve, reject) => {
+      _data.to_do[day][column] = newCell
+      try {
+        DataManager.setWeekDataForKey(_week_id, _data)
+        resolve(Array.from(newCell))
+      } catch (e) {
+        reject(e)
+      }
+    })
 
+  }
 
+  _getItem(key) {
+    let arr = key.split('_')
+    let day = arr[0]
+    let column = arr[1]
+    let index = arr[2]
+    let cell = _data.to_do[day][column]
+    return cell[index] || null
+  }
 }
