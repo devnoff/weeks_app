@@ -20,9 +20,10 @@ import Notification from './manager/notification'
 import CreateModal from './views/CreateItemModal'
 import ConfirmPanel from './views/ConfirmPanel'
 import CellSelectionController from './controllers/CellSelectionController'
-import ItemManager from './manager/item';
+import ItemManager from './manager/item'
+import _ from 'lodash'
 
-// console.log = ()=>{}
+console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -185,7 +186,7 @@ export default class App extends Component {
             ref={comp => pc.refs['editPanel'] = comp}
             confirmText="Done"
             cancelText="cancel"
-            message={`Create${'\n'}To-Do Item`}
+            message={`Edit${'\n'}To-Do Item`}
             />
     }, () => { // Fires after present create panel
       endCol.moreButtonFadeOut()
@@ -196,6 +197,8 @@ export default class App extends Component {
         item.title = self.createModal.state.title,
         item.note = self.createModal.state.note,
 
+        item = _.clone(item) /* To release memory pointers in where the old item data is used */
+
         self.week.updateToDoItem(item).then(() => {
           endCol.moreButtonFadeIn()
 
@@ -203,7 +206,6 @@ export default class App extends Component {
           ItemManager.sharedInstance().setSelectedItem(item)
 
           // Hide Close Overlay & Switch to cell select mode
-          self.forceUpdate()
           self.setState({ showCreateOverlay: false, selectionMode: false })
         }).catch((e) => {
 
