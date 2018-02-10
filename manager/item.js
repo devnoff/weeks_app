@@ -36,13 +36,10 @@ export default class ItemManager {
     this._selectedItem = item
 
     // Notice listeners
-    var keys = Object.keys(this._listeners)
-    for (var k in keys) {
-      let key = keys[k]
-      for (var i in this._listeners[key]) {
-        let cb = this._listeners[key][i].fn
-        if (typeof cb === 'function') cb(this._selectedItem)
-      }
+    let key = 'change'
+    for (var i in this._listeners[key]) {
+      let cb = this._listeners[key][i].fn
+      if (typeof cb === 'function') cb(this._selectedItem)
     }
 
     return true

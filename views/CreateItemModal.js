@@ -16,7 +16,6 @@ export default class CreateItemModal extends Component {
     super(props)
 
     this.state = {
-      description: props.description ? props.description : 'Create To-Do Item',
       title: props.item ? props.item.title : null,
       note: props.item ? props.item.note : null,
       show: false

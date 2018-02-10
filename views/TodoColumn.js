@@ -9,6 +9,7 @@ import WeekModel from '../models/week'
 import ItemManager from '../manager/item'
 import FadeItem from './FadeItem'
 import ScaleItem from './ScaleItem'
+import BoomItem from './BoomItem'
 import _ from 'lodash'
 import SortableList from 'react-native-sortable-list'
 
@@ -98,7 +99,6 @@ class Item extends Component {
             textStyle.push(styles.itemTextDone)
           }
 
-          // console.log(`item key : ${item.key} column: ${column} day: ${day} index: ${index} title: ${item.title}`)
           let bounce = week.lastHandledItemsSet().has(item.key)
           if (bounce) week.lastHandledItemsSet().delete(item.key)
 
@@ -114,7 +114,7 @@ class Item extends Component {
               </View>
             </View>
           )
-          return <ScaleItem scale={bounce ? 0 : 1} delay={500}>{el}</ScaleItem>;
+          return <BoomItem scale={bounce ? 0.9 : 1} delay={500}>{el}</BoomItem>;
         }.bind(this)()}
         
       </Animated.View>
@@ -232,10 +232,6 @@ export default class TodoColumn extends Component {
     if (itemManager.isLock()) return
 
     let data = this._data
-
-    // let arr = key.split('_')
-    // let day = arr[0]
-    // let index = arr[2]
     let item = data[day][index]
 
     let curr = itemManager.getSelectedItem()
@@ -305,66 +301,11 @@ export default class TodoColumn extends Component {
             }
             />
           : undefined }
-        {/* <VirtualizedList 
-          showsHorizontalScrollIndicator={false}
-          data={items}
-          horizontal={true}
-          getItemCount={(data) => items.length}
-          keyExtractor={(item, index) => item.key || index}
-          getItem={(item, index) => {
-            // let key = `${day}_${column}_${index}`// e.g. mon_0_0 : monday position 0 in column 0
-            // item[index]['key'] = key
-            return item[index];
-          }}
-          renderItem={({ item, index }) => {
-            let itemStyle = [styles.item]
-            if (item.key == selectedItemKey) itemStyle.push(styles.itemActive)
-
-            let textStyle = [styles.itemText]
-            if (item.key == selectedItemKey) textStyle.push(styles.itemTextActive)
-
-            else if (item.done) {
-              itemStyle.push(styles.itemFill)
-              textStyle.push(styles.itemTextFill)
-            }
-
-            if (item.done) {
-              textStyle.push(styles.itemTextDone)
-            }
-
-            // console.log(`item key : ${item.key} column: ${column} day: ${day} index: ${index} title: ${item.title}`)
-            let bounce = this.props.week.lastHandledItemsSet().has(item.key)
-            if (bounce) this.props.week.lastHandledItemsSet().delete(item.key)
-
-            if (day == 'fri' && column == 1) {
-              console.log('bounce : ' + bounce)
-              console.log(this.props.week.lastHandledItemsSet())
-              console.log(item.key)
-            }
-
-            let note = item.note ? item.note.split('\n')[0] : undefined
-
-            let el = (
-              <View style={styles.itemBox}>
-                <TouchableOpacity onPress={this._onPressItem.bind(this, item)}>
-                  <DynamicRow style={itemStyle}>
-                    <Text style={textStyle}>{item.title}</Text>
-                    {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
-                  </DynamicRow>
-                </TouchableOpacity>
-              </View>
-            )
-
-            return <ScaleItem scale={bounce ? 0 : 1} delay={500}>{el}</ScaleItem>;
-          }}
-        /> */}
       </View>
     )
   }
 
   _onPressSpace() {
-    // alert('pressed space')
-
     let item = ItemManager.sharedInstance().getSelectedItem()
     if (item) {
       ItemManager.sharedInstance().setSelectedItem(null)
@@ -424,9 +365,7 @@ export default class TodoColumn extends Component {
 
 const styles = StyleSheet.create({
   todoCell: {
-    flex: isIphoneX() ? 2 : 1,
-    // borderColor: 'white',
-    // borderWidth: 1
+    flex: isIphoneX() ? 2 : 1
   },
   headerCell: {
     flex: isIphoneX() ? 2 : 1,
