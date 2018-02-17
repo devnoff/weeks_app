@@ -4,7 +4,7 @@ var _lock = false
 export default class ItemManager {
 
   _selectedItem = null
-  _listeners = {change:[], update: [], updateLayout:[]}
+  _listeners = {change:[], update: [], updateLayout:[], delete: []}
   
   constructor() {
     if (__instance) throw Error('Shared instance already exists')
@@ -15,6 +15,20 @@ export default class ItemManager {
       __instance = new ItemManager()
     }
     return __instance
+  }
+
+  static indexOfItem(item) {
+    if (!item) return null
+
+    var arr = item.key.split('_')
+    return arr[2]
+  }
+
+  static cellIdOfItem(item) {
+    if (!item) return null
+
+    var arr = item.key.split('_')
+    return `${arr[0]}_${arr[1]}`
   }
 
   lock() {
@@ -68,6 +82,23 @@ export default class ItemManager {
     if (idx > -1) this._listeners[category].splice(idx, 1)
 
     console.log(this._listeners)
+  }
+
+  deleteSelectedItem() {
+    let item = this._selectedItem
+    let arr = item.key.split('_')
+    let day = arr[0]
+    let column = arr[1]
+    let cell_id = `${day}_${column}`
+    let index = arr[2]
+    
+    let key = 'delete'
+    for (var i in this._listeners[key]) {
+      let cb = this._listeners[key][i].fn
+      if (typeof cb === 'function') cb(cell_id, index)
+    }
+
+    this.reset()
   }
 
   needUpdateSelectedItem() {

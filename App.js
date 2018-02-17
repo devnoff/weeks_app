@@ -23,7 +23,7 @@ import CellSelectionController from './controllers/CellSelectionController'
 import ItemManager from './manager/item'
 import _ from 'lodash'
 
-console.log = ()=>{}
+// console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -79,9 +79,10 @@ export default class App extends Component {
       pc.popToRootPanel(() => {
         endCol.moreButtonFadeIn()
         ItemManager.sharedInstance().unlock()
-        ItemManager.sharedInstance().setSelectedItem(null)
+        // ItemManager.sharedInstance().setSelectedItem(null)
+        ItemManager.sharedInstance().deleteSelectedItem()
       })
-      this.forceUpdate()
+      // this.forceUpdate()
     })
     CellSelectionController.sharedInstance().reset()
 
@@ -197,19 +198,26 @@ export default class App extends Component {
         item.title = self.createModal.state.title,
         item.note = self.createModal.state.note,
 
-        item = _.clone(item) /* To release memory pointers in where the old item data is used */
+        item = _.cloneDeep(item) /* To release memory pointers in where the old item data is used */
+
+        self.setState({ showCreateOverlay: false, selectionMode: false })
 
         self.week.updateToDoItem(item).then(() => {
+          ItemManager.sharedInstance().needUpdateSelectedItem(item)
+
           endCol.moreButtonFadeIn()
 
-          ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
-          ItemManager.sharedInstance().setSelectedItem(item)
-
           // Hide Close Overlay & Switch to cell select mode
-          self.setState({ showCreateOverlay: false, selectionMode: false })
+          
+
+          ItemManager.sharedInstance().setSelectedItem(item)
+          // ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
+          
         }).catch((e) => {
 
         })
+
+        
 
       }
 

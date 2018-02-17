@@ -198,9 +198,15 @@ export default class WeekModel {
     let index = arr[2]
 
     return new Promise((resolve, reject) => {
-      let cell = _data.to_do[day][column]
-      if (cell.length <= index) return reject({message:'request index is out of bounds'})
-      cell[index] = item
+      var data = _data.to_do[day][column]
+      if (data.length <= index) return reject({message:'request index is out of bounds'})
+      data = [
+        ...data.slice(0, index),
+        Object.assign({}, item),
+        ...data.slice(index + 1)
+      ]
+      _data.to_do[day][column] = data
+
       try {
         DataManager.setWeekDataForKey(_week_id, _data)
         _lastHandledItems = new Set([item.key])
