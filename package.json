@@ -9,6 +9,7 @@
   "dependencies": {
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
+    "prop-types": "^15.6.0",
     "react": "16.2.0",
     "react-native": "0.52.0",
     "react-native-bounceable": "^0.2.1",
