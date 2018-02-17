@@ -23,7 +23,7 @@ import CellSelectionController from './controllers/CellSelectionController'
 import ItemManager from './manager/item'
 import _ from 'lodash'
 
-// console.log = ()=>{}
+console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -47,7 +47,8 @@ export default class App extends Component {
     this.state = {
       appState: AppState.currentState,
       selectionMode: false,
-      showCreateOverlay: false
+      showCreateOverlay: false,
+      visible: true
     }
 
 
@@ -68,6 +69,16 @@ export default class App extends Component {
     Notification.removeListener('edit_overlay_request', this)
     Notification.removeListener('dupliate_overlay_request', this)
     Notification.removeListener('delete_overlay_request', this)
+  }
+
+  componentDidUpdate() {
+    
+  }
+
+  componentWillUpdate() {
+    // if (this.state.showCreateOverlay) {
+    //   this.setState({visible: false})
+    // }
   }
 
   _handleDeleteRequest = (item) => {
@@ -176,7 +187,7 @@ export default class App extends Component {
     console.log('_handleEditRequest')
 
     // Show Create Modal
-    self.setState({ showCreateOverlay: true, selectionMode: false })
+    self.setState({ showCreateOverlay: true, selectionMode: false, visible: false })
     
     let endCol = self.endColumn
     let pc = endCol.panelController
@@ -200,10 +211,12 @@ export default class App extends Component {
 
         item = _.cloneDeep(item) /* To release memory pointers in where the old item data is used */
 
-        self.setState({ showCreateOverlay: false, selectionMode: false })
+        self.setState({ visible: true })
 
         self.week.updateToDoItem(item).then(() => {
-          ItemManager.sharedInstance().needUpdateSelectedItem(item)
+
+          self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+          // ItemManager.sharedInstance().needUpdateSelectedItem(item)
 
           endCol.moreButtonFadeIn()
 
@@ -211,7 +224,7 @@ export default class App extends Component {
           
 
           ItemManager.sharedInstance().setSelectedItem(item)
-          // ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
+          ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
           
         }).catch((e) => {
 
@@ -227,7 +240,7 @@ export default class App extends Component {
         // })
         // endCol.moreButtonFadeIn()
         ItemManager.sharedInstance().setSelectedItem(item)
-        self.setState({ showCreateOverlay: false, selectionMode: false })
+        self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
       }
     })
   }
@@ -374,7 +387,7 @@ export default class App extends Component {
 
   render() {
 
-    const { selectionMode, showCreateOverlay } = this.state
+    const { selectionMode, showCreateOverlay, visible } = this.state
 
     const week = this.week
 
@@ -403,7 +416,7 @@ export default class App extends Component {
             flexDirection: 'column',
             zIndex: 200
           }}>
-          { selectionMode ?
+          { !visible ? undefined : selectionMode ?
             <SelectionColumn 
               column={0} 
               icon={(<Icon size={20} name="weather-sunset"/>)}/> :
@@ -421,7 +434,7 @@ export default class App extends Component {
             borderRightWidth: 1,
             zIndex: 300
           }}>
-          { selectionMode ?
+          { !visible ? undefined : selectionMode ?
             <SelectionColumn 
               column={1} 
               icon={(<Icon size={20} name="weather-sunny"/>)}/> :
@@ -438,7 +451,7 @@ export default class App extends Component {
             borderRightWidth: 5,
             zIndex: 400
           }}>
-          { selectionMode ?
+          { !visible ? undefined : selectionMode ?
             <SelectionColumn 
               column={2} 
               icon={(<Icon size={20} name="weather-night"/>)}/> :

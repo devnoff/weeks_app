@@ -240,7 +240,7 @@ class Item extends Component {
   }
 
   componentDidMount() {
-    ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
+    // ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
     ItemManager.sharedInstance().addListener('change', this, this._handleItemsSelectionChange.bind(this))
 
     let selectedItem = ItemManager.sharedInstance().getSelectedItem()
@@ -250,7 +250,7 @@ class Item extends Component {
   }
 
   componentWillUnmount() {
-    ItemManager.sharedInstance().removeListener('update', this)
+    // ItemManager.sharedInstance().removeListener('update', this)
     ItemManager.sharedInstance().removeListener('change', this)
   }
 
@@ -268,12 +268,54 @@ class Item extends Component {
   
   }
 
+  _onLayoutItem(rowKey, {nativeEvent: {layout}}) {
+
+    if (rowKey == 'mon_1_0') {
+      console.log('_onLayoutItem')
+      console.log(rowKey)
+      console.log(layout)
+    }
+  }
+
   render() {
    const {day, column, week, onPress} = this.props
    const {selectedItemKey, data} = this.state
 
+    return function() {
+      let item = data
+      let itemStyle = [styles.item]
+      if (item.key == selectedItemKey) itemStyle.push(styles.itemActive)
+
+      let textStyle = [styles.itemText]
+      if (item.key == selectedItemKey) textStyle.push(styles.itemTextActive)
+
+      else if (item.done) {
+        itemStyle.push(styles.itemFill)
+        textStyle.push(styles.itemTextFill)
+      }
+
+      if (item.done) {
+        textStyle.push(styles.itemTextDone)
+      }
+
+      let bounce = week.lastHandledItemsSet().has(item.key)
+      if (bounce) week.lastHandledItemsSet().delete(item.key)
+
+      let note = item.note ? item.note.split('\n')[0] : undefined
+
+      let el = (
+        <View style={styles.itemBox}>
+          <View style={itemStyle}>
+            <Text style={textStyle} onLayout={this._onLayoutItem.bind(this, data.key)}>{item.title}</Text>
+            {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
+          </View>
+        </View>
+      )
+      return <BoomItem scale={bounce ? 0.9 : 1} delay={500}>{el}</BoomItem>;
+    }.bind(this)()
+
     return (
-      <Animated.View style={[
+      <Animated.View onLayout={this._onLayoutItem.bind(this, data.key)} style={[
         // styles.item,
         this._style
       ]}>
@@ -301,11 +343,9 @@ class Item extends Component {
 
           let el = (
             <View style={styles.itemBox}>
-              <View>
-                <View style={itemStyle}>
-                  <Text style={textStyle}>{item.title}</Text>
-                  {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
-                </View>
+              <View style={itemStyle}>
+                <Text style={textStyle}>{item.title}</Text>
+                {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
               </View>
             </View>
           )
@@ -506,7 +546,7 @@ const styles = StyleSheet.create({
     })
   },
   itemBox: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
   },
   item: {
@@ -538,7 +578,8 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 15,
     fontWeight: 'bold',
-    paddingHorizontal: 1,
+    paddingHorizontal: 1
+
   },
   itemTextFill: {
     color: '#ccc'
