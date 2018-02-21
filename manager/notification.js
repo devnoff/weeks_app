@@ -14,7 +14,7 @@ export default class Notification {
     if (typeof callback === 'function')
       __notifications[key].push({owner, callback})
 
-    console.log(__notifications)
+    // console.log(__notifications)
   }
 
   static removeListener(key, owner) {

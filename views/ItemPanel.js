@@ -48,7 +48,7 @@ export default class ItemPanel extends Panel {
   }
 
   async _onToggleDoneButton() {
-    let week = WeekManager.sharedInstance().getCurrentWeek()
+    let week = WeekManager.getCurrentWeek()
     let todoItem = this.state.todoItem
     todoItem.done = !todoItem.done
 

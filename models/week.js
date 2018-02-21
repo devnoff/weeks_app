@@ -2,6 +2,7 @@ import { AsyncStorage } from 'react-native'
 import moment from 'moment'
 import DataManager from '../manager/data'
 import dummy from '../data/dummy'
+import _ from 'lodash'
 
 var _number = 0
 var _week_id = null
@@ -72,6 +73,8 @@ export default class WeekModel {
     else {
       try {
         _data = await DataManager.getWeekDataForKey(_week_id)
+        console.log('getData')
+        console.log(_data)
         if (!_data) _data = require('../data/initial_data')
         callback(_data)
       } catch (e) {
@@ -81,7 +84,7 @@ export default class WeekModel {
     
   }
 
-  getWeekDataAtColumn(index, callback) {
+  getWeekDataAtColumn(column, callback) {
     this.getData((data) => {
       let to_do = data.to_do
       var data = {}
@@ -89,7 +92,7 @@ export default class WeekModel {
       for (var k in keys) {
         var key = keys[k]
         try {
-          data[key] = to_do[key][index]
+          data[key] = to_do[key][column]
         } catch (e) {
           data[key] = []
         }
@@ -105,45 +108,24 @@ export default class WeekModel {
       // console.log('addToDoItemsForCellIds')
       try {
         for (var i in cell_ids) {
-          var item = JSON.parse(JSON.stringify(newItem))
-          var cell_id = cell_ids[i].split('_')
-          var day = cell_id[0]
-          var column = cell_id[1]
+          var item = Object.assign({}, newItem)
+          var arr = cell_ids[i].split('_')
+          var day = arr[0]
+          var column = arr[1]
           var cell = _data.to_do[day][column]
-          var key = `${day}_${column}_${cell.length}`
+          item.order = cell.length
+
+          let max = _.maxBy(cell, 'id')
+          item.id = max ? max.id + 1 : 0
+          
+          var key = `${day}_${column}_${item.id}`
           item.key = key
+          
           cell.push(item)
           newItems.add(key)
         }
         DataManager.setWeekDataForKey(_week_id, _data)
         _lastHandledItems = newItems
-        resolve()
-      } catch (e) {
-        reject(e)
-      }
-    })
-  }
-
-  async addToDoItemAt(day, column, item) {
-    return new Promise((resolve, reject) => {
-      let cell = _data.to_do[day][column]
-      cell.push(item)
-      try {
-        DataManager.setWeekDataForKey(_week_id, _data)
-        resolve()
-      } catch (e) {
-        reject(e)
-      }
-    })
-  }
-
-  async removeToDoItemAt(day, column, index) {
-    return new Promise((resolve, reject) => {
-      let cell = _data.to_do[day][column]
-      if (cell.length <= index) return reject({message:'request index is out of bounds'})
-      cell.splice(index, 1)
-      try {
-        DataManager.setWeekDataForKey(_week_id, _data)
         resolve()
       } catch (e) {
         reject(e)
@@ -157,17 +139,24 @@ export default class WeekModel {
       let arr = key.split('_')
       let day = arr[0]
       let column = arr[1]
-      let index = arr[2]
+      let id = item.id
       let cell = _data.to_do[day][column]
-      if (cell.length <= index) return reject({message:'request index is out of bounds'})
-      cell.splice(index, 1)
+      let idx = _.findIndex(cell, {id: id})
+      if (idx > -1)
+        cell.splice(idx, 1)
+
+      _data.to_do[day][column] = cell
+
+      console.log(cell)
 
       // re-arrange
       for (var i in cell) {
         let itm = cell[i]
-        itm.key = `${day}_${column}_${i}`
+        itm.order = i
       }
       try {
+        console.log('delete item')
+        console.log(_data)
         DataManager.setWeekDataForKey(_week_id, _data)
         resolve()
       } catch (e) {
@@ -195,20 +184,19 @@ export default class WeekModel {
     let arr = key.split('_')
     let day = arr[0]
     let column = arr[1]
-    let index = arr[2]
+    let id = item.id
 
     return new Promise((resolve, reject) => {
       var data = _data.to_do[day][column]
-      if (data.length <= index) return reject({message:'request index is out of bounds'})
-      data = [
-        ...data.slice(0, index),
-        Object.assign({}, item),
-        ...data.slice(index + 1)
-      ]
-      _data.to_do[day][column] = data
+      let cell = _data.to_do[day][column]
+      let idx = _.findIndex(cell, {id: id})
+      if (idx > -1)
+        cell[idx] = Object.assign({}, item)
 
       try {
         DataManager.setWeekDataForKey(_week_id, _data)
+        console.log('update item')
+        console.log(_data)
         _lastHandledItems = new Set([item.key])
         resolve()
       } catch (e) {
@@ -222,15 +210,18 @@ export default class WeekModel {
     let day = arr[0]
     let column = arr[1]
     var newCell = []
-    console.log(items)
     for (var i in items) {
       let item = items[i]
       newCell.push(item)
     }
+
+    console.log(newCell)
     return new Promise((resolve, reject) => {
       _data.to_do[day][column] = newCell
       try {
         DataManager.setWeekDataForKey(_week_id, _data)
+        console.log('updateOrder')
+        console.log(_data)
         resolve(Array.from(newCell))
       } catch (e) {
         reject(e)
@@ -239,12 +230,4 @@ export default class WeekModel {
 
   }
 
-  _getItem(key) {
-    let arr = key.split('_')
-    let day = arr[0]
-    let column = arr[1]
-    let index = arr[2]
-    let cell = _data.to_do[day][column]
-    return cell[index] || null
-  }
 }

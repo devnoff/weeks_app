@@ -12,11 +12,12 @@ import FadeItem from './FadeItem'
 import ScaleItem from './ScaleItem'
 import BoomItem from './BoomItem'
 import _ from 'lodash'
-import SortableList from 'react-native-sortable-list'
+import SortableList from './SortableList/SortableList'
 
 const window = Dimensions.get('window')
 
 class Cell extends Component {
+
   static propTypes = {
     day: PropTypes.string.isRequired,
     column: PropTypes.number.isRequired,
@@ -33,78 +34,55 @@ class Cell extends Component {
       data: props.data
     }
 
-    console.log(props.data)
+  }
+
+  setDeletedItem(item) {
+    var items = this.props.data
+    // var idx = _.findIndex(data, {order: item.order})
+    // data.splice(idx, 1)
+
+    var d = {}
+    for (var i in items) {
+      let item = items[i]
+      // d[i] = item
+      d[item.key] = item
+    }
+
+    this.sortableList.deleteItem(d, item.key)
   }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.hasOwnProperty('data')) {
-      this.setState({
-        data: nextProps.data
-      })
-    }
-  }
-
-  componentDidMount() {
-    ItemManager.sharedInstance().addListener('delete', this, this._handleItemDeleted.bind(this))
-    ItemManager.sharedInstance().addListener('updateLayout', this, this._handleItemUpdateLayout.bind(this))
-  }
-
-  componentWillUnmount() {
-    ItemManager.sharedInstance().removeListener('delete', this)
-    ItemManager.sharedInstance().removeListener('updateLayout', this)
-  }
-
-  _handleItemUpdateLayout(item) {
-    let cell_id = ItemManager.cellIdOfItem(item)
-    if (this.cellId == cell_id) {
-      let index = ItemManager.indexOfItem(item)
-      this.setState({
-        data: [
-          ...this.state.data.slice(0, index),
-          Object.assign({}, item),
-          ...this.state.data.slice(index + 1)
-        ]
-      })
+      // this.setState({
+      //   data: nextProps.data
+      // })
+      
       // this.forceUpdate()
     }
   }
 
-  _handleItemUpdate(selectedItem) {
+  _onPressItem(order) {
 
-    let cell_id = ItemManager.cellIdOfItem(selectedItem)
-    if (cell_id != this.cellId) return
+    // var data = this.state.data
+    // data.splice(0, 1)
+    // this.setState({
+    //   data: data
+    // })
 
-    let index = ItemManager.indexOfItem(selectedItem)
+    // return
 
-    var data = this.state.data
-    data = [
-      ...data.slice(0, index),
-      Object.assign({}, selectedItem),
-      ...data.slice(index + 1)
-    ]
 
-    this.setState({ data: data })
-  }
-
-  _handleItemDeleted(cell_id, index) {
-    if (cell_id == this.cellId) {
-      var data = this.state.data
-      data.splice(index, 1)
-      this.setState({ data: data })
-    }
-  }
-
-  _onPressItem(day, column, index) {
-
-    console.log(`Pressed item ${index}`)
-
-    ReactNativeHapticFeedback.trigger('impactLight')
+    console.log(`Pressed item ${order}`)
+    console.log(this.props.week.rawData())
     
     let itemManager = ItemManager.sharedInstance()
     if (itemManager.isLock()) return
 
-    let data = this.props.data
-    let item = data[index]
+    ReactNativeHapticFeedback.trigger('impactLight')
+
+    let list = this.sortableList
+    let data = list.props.data
+    let item = data[order]
 
     let curr = itemManager.getSelectedItem()
     if (curr && curr.key == item.key) {
@@ -116,8 +94,8 @@ class Cell extends Component {
   }
 
   render() {
-    const { column, day, week } = this.props
-    const { data } = this.state
+    const { column, day, week, data } = this.props
+    // const { data } = this.state
     let items = data || []
     let cell_id = this.cellId
     return (
@@ -132,29 +110,37 @@ class Cell extends Component {
               var d = {}
               for (var i in items) {
                 let item = items[i]
-                d[i] = item
+                // d[i] = item
+                d[item.key] = item
               }
               return d
             }.bind(this)()}
             onChangeOrder={(nextOrderkeys) => {
               this._nextOrder = nextOrderkeys
+              console.log(`Next ORDER : ${this._nextOrder.join('-')}`)
             }}
             onReleaseRow={() => {
               if (this._nextOrder) {
                 console.log(this._nextOrder)
-                var nextoOrderedItems = []
+                var nextOrderedItems = []
+                var newOrder = []
                 for (var i in this._nextOrder) {
-                  var item = items[this._nextOrder[i]]
-                  item.key = `${day}_${column}_${i}`
-                  nextoOrderedItems.push(item)
+                  var idx = _.findIndex(items, {key: this._nextOrder[i]})
+                  var item = items[idx] //this._nextOrder[i]
+                  // item.key = `${day}_${column}_${i}`
+                  item.order = i 
+                  newOrder.push(item.key)
+                  nextOrderedItems.push(item)
                 }
 
-                week.updateOrder(cell_id, nextoOrderedItems).then((newOrderedItems)=>{
-                  // this._updateCellData(day, newOrderedItems)
+                week.updateOrder(cell_id, nextOrderedItems).then((newOrderedItems)=>{
+                  this.props.data = newOrderedItems
+                  this.sortableList.setOrder(newOrder)
+
                 })
               }
             }}
-            onPressRow={this._onPressItem.bind(this, day, column)}
+            onPressRow={this._onPressItem.bind(this)}
             onActivateRow={() => {
               ReactNativeHapticFeedback.trigger('impactLight')
               ItemManager.sharedInstance().setSelectedItem(null)
@@ -232,15 +218,13 @@ class Item extends Component {
     console.log(this.props.parent)
 
     if (selectedItem.key == this.state.data.key) {
-      this.setState({ data: Object.assign({}, selectedItem) })
-      setTimeout(function(){
-        this.props.parent.sortableList._onUpdateLayouts()
-      }.bind(this), 300)
+      // this.setState({data: selectedItem})
+      this.forceUpdate()
     }
   }
 
   componentDidMount() {
-    // ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
+    ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
     ItemManager.sharedInstance().addListener('change', this, this._handleItemsSelectionChange.bind(this))
 
     let selectedItem = ItemManager.sharedInstance().getSelectedItem()
@@ -250,7 +234,7 @@ class Item extends Component {
   }
 
   componentWillUnmount() {
-    // ItemManager.sharedInstance().removeListener('update', this)
+    ItemManager.sharedInstance().removeListener('update', this)
     ItemManager.sharedInstance().removeListener('change', this)
   }
 
@@ -266,57 +250,16 @@ class Item extends Component {
     if (nextProps.hasOwnProperty('selectedItemKey'))
       this.setState({selectedItemKey: nextProps.selectedItemKey})
   
-  }
-
-  _onLayoutItem(rowKey, {nativeEvent: {layout}}) {
-
-    if (rowKey == 'mon_1_0') {
-      console.log('_onLayoutItem')
-      console.log(rowKey)
-      console.log(layout)
-    }
+    if (nextProps.hasOwnProperty('data'))
+      this.setState({data: nextProps.data})
   }
 
   render() {
    const {day, column, week, onPress} = this.props
    const {selectedItemKey, data} = this.state
 
-    return function() {
-      let item = data
-      let itemStyle = [styles.item]
-      if (item.key == selectedItemKey) itemStyle.push(styles.itemActive)
-
-      let textStyle = [styles.itemText]
-      if (item.key == selectedItemKey) textStyle.push(styles.itemTextActive)
-
-      else if (item.done) {
-        itemStyle.push(styles.itemFill)
-        textStyle.push(styles.itemTextFill)
-      }
-
-      if (item.done) {
-        textStyle.push(styles.itemTextDone)
-      }
-
-      let bounce = week.lastHandledItemsSet().has(item.key)
-      if (bounce) week.lastHandledItemsSet().delete(item.key)
-
-      let note = item.note ? item.note.split('\n')[0] : undefined
-
-      let el = (
-        <View style={styles.itemBox}>
-          <View style={itemStyle}>
-            <Text style={textStyle} onLayout={this._onLayoutItem.bind(this, data.key)}>{item.title}</Text>
-            {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
-          </View>
-        </View>
-      )
-      return <BoomItem scale={bounce ? 0.9 : 1} delay={500}>{el}</BoomItem>;
-    }.bind(this)()
-
     return (
-      <Animated.View onLayout={this._onLayoutItem.bind(this, data.key)} style={[
-        // styles.item,
+      <Animated.View style={[
         this._style
       ]}>
         {function() {
@@ -387,7 +330,7 @@ class DynamicRow extends Component {
 export default class TodoColumn extends Component {
 
   _data = null
-  _sortableList = {}
+  _cells = {}
 
   constructor(props) {
     super(props)
@@ -430,7 +373,7 @@ export default class TodoColumn extends Component {
 
   componentDidMount() {
     ItemManager.sharedInstance().addListener('delete', this, this._handleItemDeleted.bind(this))
-    // ItemManager.sharedInstance().addListener('updateLayout', this, this._handleItemUpdateLayout.bind(this))
+
     let week = this.props.week
     this.loadData(function() {
       this.forceUpdate() 
@@ -438,32 +381,30 @@ export default class TodoColumn extends Component {
   }
 
   componentWillUnmount() {
-    // ItemManager.sharedInstance().removeListener('updateLayout', this)
     ItemManager.sharedInstance().removeListener('delete', this)
   }
 
+  _handleItemDeleted(cell_id, deletedItem) {
 
-  _handleItemDeleted(cell_id, index) {
-    let list = this._sortableList[cell_id]
-    if (list) {
-      this.loadData()
+    // let day = cell_id.substring(0, 3)
+    // let items = this._data ? this._data[day] : [] || []
+
+    // var idx = -1
+    // for (var i in items) {
+    //   if (deletedItem == items[i]) {
+    //     idx = i
+    //     break
+    //   }
+    // }
+    // if (idx > -1)
+    //   items.splice(idx, 1)
+
+    let cell = this._cells[cell_id]
+    if (cell) {
+      cell.setDeletedItem(deletedItem)
     }
+
   }
-
-  _handleItemUpdateLayout(selectedItem) {
-    // var arr = selectedItem.key.split('_')
-    // let day = arr[0]
-    // let column = arr[1]
-    // let cell_id = `${day}_${column}`
-
-    // let list = this._sortableList[cell_id]
-    // if (list) {
-    //   this.loadData(() => {
-    //     this.forceUpdate()
-    //   })
-    // }    
-  }
-
   
 
   _updateCellData(day, cellData) {
@@ -473,8 +414,14 @@ export default class TodoColumn extends Component {
   _getCellForDay(day) {
     const { column, week } = this.props
     let items = this._data ? this._data[day] : [] || []
-
-    return (<Cell day={day} column={column} data={items} week={week} />)
+    let cell_id = `${day}_${column}`
+    return (<Cell
+              day={day} 
+              column={column} 
+              data={items} 
+              week={week} 
+              ref={(ref) => { this._cells[cell_id] = ref }}
+              />)
   }
 
   _onPressSpace() {

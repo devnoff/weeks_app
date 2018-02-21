@@ -36,11 +36,11 @@ export default class WeekManager {
       this._listeners[category].push(callback)
   }
 
-  setCurrentWeek(week) {
+  static setCurrentWeek(week) {
     _week = week
   }
 
-  getCurrentWeek() {
+  static getCurrentWeek() {
     return _week
   }
 

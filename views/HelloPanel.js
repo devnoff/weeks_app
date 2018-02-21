@@ -22,9 +22,9 @@ export default class HelloPanel extends Panel {
     this.state = {
       showModal: false,
       show: true,
-      week_no: WeekManager.sharedInstance().getCurrentWeek().getWeekNumber(),
-      start_date_str: WeekManager.sharedInstance().getCurrentWeek().getStartDateStr(),
-      end_date_str: WeekManager.sharedInstance().getCurrentWeek().getEndDateStr()
+      week_no: WeekManager.getCurrentWeek().getWeekNumber(),
+      start_date_str: WeekManager.getCurrentWeek().getStartDateStr(),
+      end_date_str: WeekManager.getCurrentWeek().getEndDateStr()
     }
   }
 

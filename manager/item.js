@@ -69,7 +69,7 @@ export default class ItemManager {
   }
 
   removeListener(category, owner) {
-    console.log(this._listeners)
+    // console.log(this._listeners)
 
     var idx = -1
     let l = this._listeners[category]
@@ -81,21 +81,18 @@ export default class ItemManager {
     }
     if (idx > -1) this._listeners[category].splice(idx, 1)
 
-    console.log(this._listeners)
+    // console.log(this._listeners)
   }
 
   deleteSelectedItem() {
     let item = this._selectedItem
-    let arr = item.key.split('_')
-    let day = arr[0]
-    let column = arr[1]
-    let cell_id = `${day}_${column}`
-    let index = arr[2]
-    
     let key = 'delete'
+
+    let arr = item.key.split('_')
+    let cell_id = `${arr[0]}_${arr[1]}`
     for (var i in this._listeners[key]) {
       let cb = this._listeners[key][i].fn
-      if (typeof cb === 'function') cb(cell_id, index)
+      if (typeof cb === 'function') cb(cell_id, item)
     }
 
     this.reset()
