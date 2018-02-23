@@ -34,11 +34,16 @@ export default class PanelController {
       let el = this.refs[last.ref]
       return el
     }
+
+    this.getParent = () => {
+      return _parentView
+    }
   }
 
   initialize() {
     let last = this._lastChild()
     let el = this.refs[last.ref]
+    el.setPanelController(this)
     el.show()
   }
 
@@ -62,6 +67,7 @@ export default class PanelController {
         _parentView.forceUpdate(() => {
           let last = this._lastChild()
           let el = this.refs[last.ref]
+          el.setPanelController(this)
           el.onShow = () => {
             _animating = false
 
@@ -101,7 +107,7 @@ export default class PanelController {
         el.onShow = () => {
           _animating = false
 
-          if (callback) callback()
+          if (callback) callback(el)
         }
         el.show()
       })
@@ -144,6 +150,7 @@ export default class PanelController {
         _parentView.forceUpdate(() => {
           let last = this._lastChild()
           let el = this.refs[last.ref]
+          el.setPanelController(this)
           el.onShow = () => {
             _animating = false
 

@@ -85,7 +85,8 @@ export default class SortableList extends Component {
   }
 
   componentWillMount() {
-    /*this.state*/ this._order.forEach((key) => {
+    // console.log(this._order, 'sortableList componentWillMount')
+    this._order.forEach((key) => {
       this._rowsLayouts[key] = new Promise((resolve) => {
         this._resolveRowLayout[key] = resolve;
       });
@@ -150,8 +151,8 @@ export default class SortableList extends Component {
     this._order = nextOrder
     this._data = nextData
 
-    console.log(this._order)
-    console.log(this._data)
+    // console.log(this._order)
+    // console.log(this._data)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -160,6 +161,10 @@ export default class SortableList extends Component {
     // const {data} = this.props; //this.state
     // const {order} = this.state; /* rb */
     let {data: nextData, order: nextOrder} = nextProps;
+
+    // console.log(this._order, 'sortableList componentWillReceiveProps')
+    // console.log(data, 'sortableList data')
+    // console.log(nextData, 'sortableList nextData')
 
     if (data && nextData && !shallowEqual(data, nextData)) {
       nextOrder = nextOrder || Object.keys(nextData)
@@ -252,7 +257,7 @@ export default class SortableList extends Component {
     let contentWidth = this._contentWidth;
     const {contentContainerStyle, horizontal, style} = this.props;
     const {animated, contentHeight, scrollEnabled} = this.state;
-    const containerStyle = StyleSheet.flatten([style, {opacity: Number(animated)}])
+    const containerStyle = StyleSheet.flatten([style, {opacity: 1}])
     const innerContainerStyle = [
       styles.rowsContainer,
       horizontal ? {width: contentWidth} : {height: contentHeight},

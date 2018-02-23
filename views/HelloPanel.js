@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Animated
 } from 'react-native';
 import FadeItem from './FadeItem'
@@ -13,6 +14,8 @@ import Panel from './Panel'
 import CreateItemModal from './CreateItemModal'
 import Notification from '../manager/notification'
 import WeekManager from '../manager/week'
+import WeekSwitchPanel from './WeekSwitchPanel'
+import ItemManager from '../manager/item'
 
 export default class HelloPanel extends Panel {  
 
@@ -20,20 +23,11 @@ export default class HelloPanel extends Panel {
     super(props)
 
     this.state = {
-      showModal: false,
       show: true,
       week_no: WeekManager.getCurrentWeek().getWeekNumber(),
       start_date_str: WeekManager.getCurrentWeek().getStartDateStr(),
       end_date_str: WeekManager.getCurrentWeek().getEndDateStr()
     }
-  }
-
-  showModal() {
-    this.setState({showModal: true})
-  }
-
-  hideModal() {
-    this.setState({showModal: false})
   }
 
   show() {
@@ -49,6 +43,30 @@ export default class HelloPanel extends Panel {
     Notification.post('create_overlay_request')
   }
 
+  _handlePressWeekButton() {
+    
+    // Notification.post('week_switch_request')
+
+    let panelController = this.getPanelController()
+
+    if (panelController.isAnimating()) return
+
+    ReactNativeHapticFeedback.trigger()
+
+    let endColumn = panelController.getParent()
+    ItemManager.sharedInstance().lock()
+    endColumn.moreButtonFadeOut()
+
+    panelController.push({ 
+      ref: 'weekSwitchPanel',
+       el: <WeekSwitchPanel 
+            ref={comp => panelController.refs['weekSwitchPanel'] = comp}
+            />
+    }, () => {
+      ItemManager.sharedInstance().unlock()
+    })
+  }
+
   checkComplete() {
     if (this.state.show) {
       // console.log('on show!')
@@ -60,7 +78,7 @@ export default class HelloPanel extends Panel {
 
   render() {
 
-    const { show, showModal, fade, week_no, start_date_str, end_date_str } = this.state
+    const { show, fade, week_no, start_date_str, end_date_str } = this.state
 
     return (
       <FadeItem 
@@ -71,10 +89,12 @@ export default class HelloPanel extends Panel {
         duration={300}
         show={show}
         >
-        <View style={styles.weekView}>
-          <Text style={styles.weekText}>WEEK<Text style={styles.weekNum}>#{week_no}</Text></Text>
-          <Text style={styles.periodText}>{start_date_str}{"\n"}~ {end_date_str}</Text>
-        </View>
+        <TouchableWithoutFeedback onPress={this._handlePressWeekButton.bind(this)} style={{flex: 1}}>
+          <View style={styles.weekView}>
+            <Text style={styles.weekText}>WEEK<Text style={styles.weekNum}>#{week_no}</Text></Text>
+            <Text style={styles.periodText}>{start_date_str}{"\n"}~ {end_date_str}</Text>
+          </View>
+        </TouchableWithoutFeedback>
         <View style={styles.buttonView}>
           <TouchableOpacity onPress={this._handlePressAddButton.bind(this)}>
             <View style={styles.buttonBox}>
@@ -84,14 +104,6 @@ export default class HelloPanel extends Panel {
         </View>
         <View pointerEvents="none" style={styles.extraSpace}></View>
 
-        {/* ------- Modals ------ */}
-        
-        {(showModal ? <CreateItemModal 
-          visible={showModal}
-          animationType={'slide'}
-          onRequestClose={() => this.hideModal()}
-          supportedOrientations={['landscape']} /> : undefined)}
-        
       </FadeItem>
     );
   }

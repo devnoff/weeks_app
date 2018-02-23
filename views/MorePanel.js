@@ -57,7 +57,7 @@ export default class MorePanel extends Panel {
        el: <ImportConfirmPanel
             ref={comp => panelController.refs['importConfirmPanel'] = comp}
             />
-    }, () => {
+    }, (el) => {
     })
   }
 

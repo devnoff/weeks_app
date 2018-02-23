@@ -4,14 +4,14 @@ import DataManager from '../manager/data'
 import dummy from '../data/dummy'
 import _ from 'lodash'
 
-var _number = 0
-var _week_id = null
-var _date_start = null // moment obj
-var _date_end = null
-var _data = null
-var _lastHandledItems = new Set()
-
 export default class WeekModel {
+
+  _number = 0
+  _week_id = null
+  _date_start = null // moment obj
+  _date_end = null
+  _data = null
+  _lastHandledItems = new Set()
 
   /* 
    * WeekModel is rely on moment.js object Moment to generate store key
@@ -21,41 +21,57 @@ export default class WeekModel {
    */
   constructor(date) {
     let d = date || moment()
-    _number = d.isoWeek()
-    _week_id = `${d.year()}_${_number}` // e.g. 2018_1
-    _date_start = moment(d).startOf('isoWeek')
-    console.log(_date_start)
-    _date_end = moment(d).endOf('isoWeek')
-    console.log(_date_end)
+    this._number = d.isoWeek()
+    this._week_id = `${d.year()}_${this._number}` // e.g. 2018_1
+    this._date_start = moment(d).startOf('isoWeek')
+    console.log(this._week_id)
+    this._date_end = moment(d).endOf('isoWeek')
+    console.log(this._date_end)
 
-    // _data = require('../data/dummy')
-    // return
+    
+    // DataManager.setWeekDataForKey('2018_7', this._data)
+
 
     try {
       
     } catch(e) {
       throw Error('Error at Initializing WeekModel due to fetch week data')
     }
+  }
 
-    this.rawData = () => {
-      return _data
-    }
+  getYear = () => {
+    return this._week_id.substring(0, 4)
+  }
 
-    this.getWeekNumber = () => {
-      return _number
-    }
+  rawData = () => {
+    return this._data
+  }
 
-    this.getStartDateStr = () => {
-      return _date_start.format('D MMM YYYY')
-    }
+  getWeekNumber = () => {
+    return this._number
+  }
 
-    this.getEndDateStr = () => {
-      return _date_end.format('D MMM YYYY')
-    }
+  getStartDateStr = () => {
+    return this._date_start.format('D MMM YYYY')
+  }
 
-    this.lastHandledItemsSet = () => {
-      return _lastHandledItems
-    }
+  getEndDateStr = () => {
+    return this._date_end.format('D MMM YYYY')
+  }
+
+  lastHandledItemsSet = () => {
+    return this._lastHandledItems
+  }
+
+  weekId = () => {
+    return this._week_id
+  }
+
+  isThisWeek = () => {
+    let d = moment()
+    let wn = d.isoWeek()
+    let y = d.year()
+    return (this._number == wn && this.getYear() == y)
   }
 
   isCurrentWeek() {
@@ -63,20 +79,26 @@ export default class WeekModel {
     let d = moment()
     let week_id = `${d.year()}_${d.isoWeek()}` // e.g. 2018_1
     
-    return (_week_id == week_id)
+    return (this._week_id == week_id)
   }
 
   async getData(callback) {
-    // _data = dummy
-    // _data = require('../data/initial_data')
-    if (_data != null) return callback(_data)
+    // this._data = dummy
+    // this._data = require('../data/initial_data')
+    if (this._data != null) {
+      console.log(this._data, 'loadData exist data')
+      return callback(this._data)
+    }
     else {
       try {
-        _data = await DataManager.getWeekDataForKey(_week_id)
+        this._data = await DataManager.getWeekDataForKey(this._week_id)
         console.log('getData')
-        console.log(_data)
-        if (!_data) _data = require('../data/initial_data')
-        callback(_data)
+        console.log(this._data, 'loadData new')
+        if (!this._data) {
+          this._data = require('../data/initial_data.json')
+          this._data.week_id = this._week_id
+        }
+        callback(this._data)
       } catch (e) {
         callback(null)
       }
@@ -84,20 +106,41 @@ export default class WeekModel {
     
   }
 
+  async setData(data, callback) {
+    if (!data) return callback(false)
+    else {
+      try {
+        await DataManager.setWeekDataForKey(this._week_id, data)
+        console.log(this._week_id, 'setData')
+        console.log(data)
+        this._data = data
+        callback(true)
+      } catch (e) {
+        callback(false)
+      }
+    }
+  }
+
   getWeekDataAtColumn(column, callback) {
     this.getData((data) => {
-      let to_do = data.to_do
-      var data = {}
-      let keys = Object.keys(to_do)
-      for (var k in keys) {
-        var key = keys[k]
-        try {
-          data[key] = to_do[key][column]
-        } catch (e) {
-          data[key] = []
+      if (data) {
+        let to_do = data.to_do
+        var data = {}
+        let keys = Object.keys(to_do)
+        for (var k in keys) {
+          var key = keys[k]
+          try {
+            data[key] = to_do[key][column]
+          } catch (e) {
+            data[key] = []
+          }
         }
+        callback(data)
+      } else {
+        callback(null)
       }
-      callback(data)
+      
+      
     })
   }
 
@@ -112,7 +155,7 @@ export default class WeekModel {
           var arr = cell_ids[i].split('_')
           var day = arr[0]
           var column = arr[1]
-          var cell = _data.to_do[day][column]
+          var cell = this._data.to_do[day][column]
           item.order = cell.length
 
           let max = _.maxBy(cell, 'id')
@@ -124,8 +167,8 @@ export default class WeekModel {
           cell.push(item)
           newItems.add(key)
         }
-        DataManager.setWeekDataForKey(_week_id, _data)
-        _lastHandledItems = newItems
+        DataManager.setWeekDataForKey(this._week_id, this._data)
+        this._lastHandledItems = newItems
         resolve()
       } catch (e) {
         reject(e)
@@ -140,12 +183,12 @@ export default class WeekModel {
       let day = arr[0]
       let column = arr[1]
       let id = item.id
-      let cell = _data.to_do[day][column]
+      let cell = this._data.to_do[day][column]
       let idx = _.findIndex(cell, {id: id})
       if (idx > -1)
         cell.splice(idx, 1)
 
-      _data.to_do[day][column] = cell
+      this._data.to_do[day][column] = cell
 
       console.log(cell)
 
@@ -156,8 +199,8 @@ export default class WeekModel {
       }
       try {
         console.log('delete item')
-        console.log(_data)
-        DataManager.setWeekDataForKey(_week_id, _data)
+        console.log(this._data)
+        DataManager.setWeekDataForKey(this._week_id, this._data)
         resolve()
       } catch (e) {
         reject(e)
@@ -167,11 +210,11 @@ export default class WeekModel {
 
   async replaceToDoItemAt(day, column, index, item) {
     return new Promise((resolve, reject) => {
-      let cell = _data.to_do[day][column]
+      let cell = this._data.to_do[day][column]
       if (cell.length <= index) return reject({message:'request index is out of bounds'})
       cell[index] = item
       try {
-        DataManager.setWeekDataForKey(_week_id, _data)
+        DataManager.setWeekDataForKey(this._week_id, this._data)
         resolve()
       } catch (e) {
         reject(e)
@@ -187,17 +230,17 @@ export default class WeekModel {
     let id = item.id
 
     return new Promise((resolve, reject) => {
-      var data = _data.to_do[day][column]
-      let cell = _data.to_do[day][column]
+      var data = this._data.to_do[day][column]
+      let cell = this._data.to_do[day][column]
       let idx = _.findIndex(cell, {id: id})
       if (idx > -1)
         cell[idx] = Object.assign({}, item)
 
       try {
-        DataManager.setWeekDataForKey(_week_id, _data)
+        DataManager.setWeekDataForKey(this._week_id, this._data)
         console.log('update item')
-        console.log(_data)
-        _lastHandledItems = new Set([item.key])
+        console.log(this._data)
+        this._lastHandledItems = new Set([item.key])
         resolve()
       } catch (e) {
         reject(e)
@@ -217,17 +260,47 @@ export default class WeekModel {
 
     console.log(newCell)
     return new Promise((resolve, reject) => {
-      _data.to_do[day][column] = newCell
+      this._data.to_do[day][column] = newCell
       try {
-        DataManager.setWeekDataForKey(_week_id, _data)
+        DataManager.setWeekDataForKey(this._week_id, this._data)
         console.log('updateOrder')
-        console.log(_data)
+        console.log(this._data)
         resolve(Array.from(newCell))
       } catch (e) {
         reject(e)
       }
     })
 
+  }
+
+  reset() {
+    this._data = require('../data/initial_data')
+    return new Promise((resolve, reject) => {
+      try {
+        DataManager.setWeekDataForKey(this._week_id, this._data)
+        this._lastHandledItems = new Set()
+        resolve()
+      } catch (e) {
+        reject(e)
+      }
+    })
+  }
+
+  isEmpty() {
+
+    var count = 0
+    let to_do = this._data.to_do
+    let keys = Object.keys(to_do)
+    for (var k in keys) {
+      var key = keys[k]
+      var cols = to_do[key]
+      for (var i in cols) {
+        var col = cols[i]
+        count += col.length
+      }
+    }
+
+    return count < 1
   }
 
 }

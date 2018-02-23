@@ -8,15 +8,23 @@ import {
 } from 'react-native';
 import SlideItem from './SlideItem'
 import Panel from './Panel'
+import Notification from '../manager/notification'
+import WeekModel from '../models/week'
+import moment from 'moment'
 
 export default class ImportConfirmPanel extends Panel {  
-  state = {
-    show: false,
-  }
+  items = {}
 
   constructor(props) {
     super(props)
+   
+    this.state = {
+      show: false,
+      disabled: false,
+      available: true
+    }
   }
+
 
   show() {
     this.setState({show: true})
@@ -27,14 +35,24 @@ export default class ImportConfirmPanel extends Panel {
   }
 
   _onPressConfirmButton() {
-    alert('pressed confirm')
+    let aweekago = moment().subtract(7, 'days')
+    let lastWeek = new WeekModel(aweekago)
+    lastWeek.getData(() => {
+      if (lastWeek.isEmpty()) {
+        this.setState({available: false})
+      } else {
+        Notification.post('import_from_prev_week_request')
+      }
+    })
   }
+
 
   checkComplete() {
     var done = true
-    let items = [this.item1, this.item2,this.item3]
-    for (var i in items) {
-
+    let items = this.items
+    let keys = Object.keys(items)
+    console.log(keys)
+    for (let i of keys) {
       let item = items[i]
 
       if (this.state.show && !item.visible) {
@@ -58,53 +76,60 @@ export default class ImportConfirmPanel extends Panel {
 
   render() {
 
-    const { show, showSettingModal } = this.state
+    const { show, showSettingModal, available } = this.state
 
-    return (
-      <View pointerEvents="box-none" style={styles.view}>
-        <SlideItem
-          style={styles.slideItem}
-          ref={(item) => { this.item1 = item}}
-          onFinishAnim={this.checkComplete.bind(this)}
-          x={-80} 
-          delay={50} 
-          to={10} 
-          show={show} >
-          <Text style={styles.description}>
-            Current week is not empty, choose a action you want execute
-          </Text>
-        </SlideItem>
-        <SlideItem 
-          style={styles.slideItem}
-          ref={(item) => { this.item2 = item}}
-          onFinishAnim={this.checkComplete.bind(this)}
-          x={-80} 
-          delay={150} 
-          to={10} 
-          show={show} >
-          <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
-            <Text style={styles.title}>
-              Merge
+    return function() {
+      if (!available) {
+        return (
+        <View pointerEvents="box-none" style={styles.view}>
+          <SlideItem
+            style={styles.slideItem}
+            ref={(item) => { this.items['0'] = item}}
+            onFinishAnim={this.checkComplete.bind(this)}
+            x={-80} 
+            delay={50} 
+            to={10} 
+            show={show} >
+            <Text style={styles.description}>
+              Last week is is empty
             </Text>
-          </TouchableOpacity>
-        </SlideItem>
-        <SlideItem 
-          style={styles.slideItem}
-          ref={(item) => { this.item3 = item}}
-          onFinishAnim={this.checkComplete.bind(this)}
-          x={-80} 
-          delay={150} 
-          to={10} 
-          show={show} >
-          <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
-            <Text style={styles.title}>
-              Replace
-            </Text>
-          </TouchableOpacity>
-        </SlideItem>
-        <View pointerEvents="none" style={styles.extraSpace}></View>
-      </View>  
-    );
+          </SlideItem>
+        </View>
+        )
+      } else {
+        return (
+          <View pointerEvents="box-none" style={styles.view}>
+            <SlideItem
+              style={styles.slideItem}
+              ref={(item) => { this.items['1'] = item}}
+              onFinishAnim={this.checkComplete.bind(this)}
+              x={-80} 
+              delay={50} 
+              to={10} 
+              show={show} >
+              <Text style={styles.description}>
+                Will you import To-do items from last week? You will lose existing items in current week.
+              </Text>
+            </SlideItem>
+            <SlideItem 
+              style={styles.slideItem}
+              ref={(item) => { this.items['2'] = item}}
+              onFinishAnim={this.checkComplete.bind(this)}
+              x={-80} 
+              delay={150} 
+              to={10} 
+              show={show} >
+              <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
+                <Text style={styles.title}>
+                  Import
+                </Text>
+              </TouchableOpacity>
+            </SlideItem>
+            <View pointerEvents="none" style={styles.extraSpace}></View>
+          </View>
+        )
+      }
+    }.bind(this)()
   }
 }
 

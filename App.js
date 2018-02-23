@@ -18,12 +18,15 @@ import WeekManager from './manager/week'
 import Overlay from './views/Overlay'
 import Notification from './manager/notification'
 import CreateModal from './views/CreateItemModal'
+import WeekSelectorModal from './views/WeekSelectorModal'
 import ConfirmPanel from './views/ConfirmPanel'
 import CellSelectionController from './controllers/CellSelectionController'
 import ItemManager from './manager/item'
 import _ from 'lodash'
+import moment from 'moment'
+import DataManager from './manager/data'
 
-console.log = ()=>{}
+// console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -36,20 +39,17 @@ export default class App extends Component {
   constructor(props) {
     super(props)
 
-    this.week = new WeekModel()
-
-    console.log(this.week)
-
-    console.log(this.week.isCurrentWeek())
-
-    WeekManager.setCurrentWeek(this.week)
-
     this.state = {
       appState: AppState.currentState,
       selectionMode: false,
       showCreateOverlay: false,
-      visible: true
+      showWeekSelector: false,
+      visible: true,
+      week: new WeekModel()
     }
+
+    WeekManager.setCurrentWeek(this.state.week)
+    console.log(this.state.week.isCurrentWeek())
 
 
   }
@@ -60,6 +60,11 @@ export default class App extends Component {
     Notification.addListener('edit_overlay_request',this, this._handleEditRequest.bind(this))
     Notification.addListener('dupliate_overlay_request',this, this._handleDuplicateRequest.bind(this))
     Notification.addListener('delete_overlay_request',this, this._handleDeleteRequest.bind(this))
+    Notification.addListener('reset_this_week_request',this, this._handleResetThisWeek.bind(this))
+    Notification.addListener('import_from_prev_week_request',this, this._handleImportFromLastWeek.bind(this))
+    Notification.addListener('prev_week_request',this, this._handleRequestPrevWeek.bind(this))
+    Notification.addListener('next_week_request',this, this._handleRequestNextWeek.bind(this))
+    Notification.addListener('this_week_request',this, this._handleRequestThisWeek.bind(this))
     
   }
 
@@ -68,7 +73,42 @@ export default class App extends Component {
     Notification.removeListener('create_overlay_request', this)
     Notification.removeListener('edit_overlay_request', this)
     Notification.removeListener('dupliate_overlay_request', this)
-    Notification.removeListener('delete_overlay_request', this)
+    Notification.removeListener('reset_this_week_request', this)
+    Notification.removeListener('import_from_prev_week_request', this)
+    Notification.removeListener('prev_week_request', this)
+    Notification.removeListener('next_week_request', this)
+    Notification.removeListener('this_week_request', this)
+  }
+
+  _handleWeekSelectorRequest() {
+    // 1. Present week selector modal
+    // 2. Push Confirm(cancel) panel
+
+    this.setState({ showWeekSelector: true})
+  }
+
+  _handleImportFromLastWeek = () => {
+    let comp = this.state.week.weekId().split('_')
+    let year = comp[0]
+    let week_no = parseInt(comp[1]) - 1
+    let aweekago = moment().year(year).isoWeek(week_no)
+    let newWeek = new WeekModel(aweekago)
+    newWeek.getData((data) => {
+      console.log(data, 'prev week')
+      data.week_id = this.state.week.weekId()
+      this.state.week.setData(data, () => {
+        this.forceUpdate()
+        this.endColumn.panelController.popToRootPanel()
+      })
+    })
+  }
+
+  _handleResetThisWeek = () => {
+    this.state.week.reset().then(() => {
+      this.forceUpdate()
+      this.endColumn.panelController.popToRootPanel()
+    })
+    
   }
 
   _handleDeleteRequest = (item) => {
@@ -76,7 +116,7 @@ export default class App extends Component {
 
     let endCol = this.endColumn
     let pc = endCol.panelController
-    this.week.deleteToDoItem(item).then(() => {
+    this.state.week.deleteToDoItem(item).then(() => {
       ItemManager.sharedInstance().deleteSelectedItem()
 
       pc.popToRootPanel(() => {
@@ -120,7 +160,7 @@ export default class App extends Component {
 
       duplicatePanel.onConfirm = () => {
         let cell_ids = CellSelectionController.sharedInstance().getSelectedCells()
-        self.week.addToDoItemsForCellIds(item, cell_ids).then(() => {
+        self.state.week.addToDoItemsForCellIds(item, cell_ids).then(() => {
           pc.popToRootPanel()
           endCol.moreButtonFadeIn()
           ItemManager.sharedInstance().setSelectedItem(null)
@@ -169,7 +209,7 @@ export default class App extends Component {
 
         self.setState({ visible: true })
 
-        self.week.updateToDoItem(item).then(() => {
+        self.state.week.updateToDoItem(item).then(() => {
 
           self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
           // ItemManager.sharedInstance().needUpdateSelectedItem(item)
@@ -274,7 +314,7 @@ export default class App extends Component {
             // Add item to week object
 
             let cell_ids = CellSelectionController.sharedInstance().getSelectedCells()
-            self.week.addToDoItemsForCellIds(newItem, cell_ids).then(() => {
+            self.state.week.addToDoItemsForCellIds(newItem, cell_ids).then(() => {
               pc.popToRootPanel(() => {
                 
               })
@@ -321,27 +361,45 @@ export default class App extends Component {
     }
     this.setState({appState: nextAppState});
   }
-  
 
-  requestPrevWeek() {
-    let week_no = moment().isoWeek() - 1
+  _handleRequestThisWeek() {
+    let newWeek = new WeekModel()
+    WeekManager.setCurrentWeek(newWeek)
     this.setState({
-      week: WeekModel(moment().isoWeek(week_no))
+      week: newWeek
     })
   }
 
-  requestNextWeek() {
-    let week_no = moment().isoWeek() + 1
+  _handleRequestPrevWeek() {
+    let comp = this.state.week.weekId().split('_')
+    let year = comp[0]
+    let week_no = parseInt(comp[1]) - 1
+    console.log(week_no, year, 'prev week no')
+    let newWeek = new WeekModel(moment().year(year).isoWeek(week_no))
+    WeekManager.setCurrentWeek(newWeek)
     this.setState({
-      week: WeekModel(moment().isoWeek(week_no))
+      week: newWeek
     })
+  }
+
+  _handleRequestNextWeek() {
+    let comp = this.state.week.weekId().split('_')
+    let year = comp[0]
+    let week_no = parseInt(comp[1]) + 1
+    console.log(week_no, year, 'next week no')
+    let newWeek = new WeekModel(moment().year(year).isoWeek(week_no))
+    WeekManager.setCurrentWeek(newWeek)
+    this.setState({
+      week: newWeek
+    })
+    // this.forceUpdate()
   }
 
   render() {
 
-    const { selectionMode, showCreateOverlay, visible } = this.state
+    const { selectionMode, showCreateOverlay, showWeekSelector, visible } = this.state
 
-    const week = this.week
+    const week = this.state.week
 
     let iphoneX = isIphoneX()
 
@@ -357,16 +415,16 @@ export default class App extends Component {
             flex: _flex(1), 
             borderRightColor: '#666',
             borderRightWidth: 1,
-            zIndex: 100
+            // zIndex: 100
           }}>
-            <WeekHeader week={week} ref={(ref) => { this.weekHeader = ref }}/>
+            <WeekHeader week={week} ref={(ref) => { this.state.weekHeader = ref }}/>
           </View>
           <View style={{
             flex: _flex(3), 
             borderRightColor: '#666',
             borderRightWidth: 1,
             flexDirection: 'column',
-            zIndex: 200
+            // zIndex: 200
           }}>
           { !visible ? undefined : selectionMode ?
             <SelectionColumn 
@@ -384,7 +442,7 @@ export default class App extends Component {
             flex: _flex(3),
             borderRightColor: '#666',
             borderRightWidth: 1,
-            zIndex: 300
+            // zIndex: 300
           }}>
           { !visible ? undefined : selectionMode ?
             <SelectionColumn 
@@ -401,7 +459,7 @@ export default class App extends Component {
             flex: _flex(3),
             borderRightColor: '#666',
             borderRightWidth: 5,
-            zIndex: 400
+            // zIndex: 400
           }}>
           { !visible ? undefined : selectionMode ?
             <SelectionColumn 
@@ -416,7 +474,7 @@ export default class App extends Component {
           </View>
           <View style={{
             flex: _flex(2),
-            zIndex: 1000
+            // zIndex: 1000
           }}>
             <EndColumn week={week} ref={(ref) => { this.endColumn = ref }}/>
           </View>
@@ -427,12 +485,19 @@ export default class App extends Component {
           }()}
         </ImageBackground>
         
-        {/* Overlay */}
+        {/* Overlays */}
         <Overlay pointerEvents="box-none" show={showCreateOverlay} delay={0}>
           <View pointerEvents="box-none" style={styles.createModal}>
             {showCreateOverlay ? <CreateModal item={ItemManager.sharedInstance().getSelectedItem()} ref={(ref) => {this.createModal = ref} } /> : undefined}
           </View>
         </Overlay>
+
+        <Overlay pointerEvents="box-none" show={showWeekSelector} delay={0}>
+          <View pointerEvents="box-none" style={styles.createModal}>
+            {showWeekSelector ? <WeekSelectorModal currentWeekId={this.state.week.weekId()} ref={(ref) => {this.state.weekSelectorModal = ref} } /> : undefined}
+          </View>
+        </Overlay>
+
       </View>
     );
   }

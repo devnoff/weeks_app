@@ -5,7 +5,12 @@ __notifications = {
   dupliate_overlay_request: [],
   delete_overlay_request: [],
   title_text_input_change: [],
-  cell_select_change: []
+  cell_select_change: [],
+  reset_this_week_request: [],
+  import_from_prev_week_request: [],
+  prev_week_request: [],
+  next_week_request: [],
+  this_week_request: []
 }
 
 export default class Notification {

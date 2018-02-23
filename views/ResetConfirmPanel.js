@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import SlideItem from './SlideItem'
 import Panel from './Panel'
+import Notification from '../manager/notification'
 
 export default class ResetConfirmPanel extends Panel {  
   state = {
@@ -26,7 +27,7 @@ export default class ResetConfirmPanel extends Panel {
   }
 
   _onPressConfirmButton() {
-    alert('pressed confirm')
+    Notification.post('reset_this_week_request')
   }
 
   checkComplete() {

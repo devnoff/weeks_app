@@ -31,7 +31,8 @@ class Cell extends Component {
     this.cellId = `${props.day}_${props.column}`
 
     this.state = {
-      data: props.data
+      data: props.data,
+      week: props.week
     }
 
   }
@@ -52,28 +53,30 @@ class Cell extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.hasOwnProperty('data')) {
-      // this.setState({
-      //   data: nextProps.data
-      // })
-      
-      // this.forceUpdate()
+
+    var newState = {}
+    if (nextProps.hasOwnProperty('week')) {
+      newState['week'] = nextProps.week
     }
+
+    if (nextProps.hasOwnProperty('data')) {
+      newState['data'] = nextProps.data
+    }
+
+    if (newState.hasOwnProperty('week') && newState.hasOwnProperty('data')) {
+      this.setState({data : null}, () => {
+        this.setState(newState)    
+      })
+    } else {
+      this.setState(newState)
+    }
+    
   }
 
   _onPressItem(order) {
 
-    // var data = this.state.data
-    // data.splice(0, 1)
-    // this.setState({
-    //   data: data
-    // })
-
-    // return
-
-
     console.log(`Pressed item ${order}`)
-    console.log(this.props.week.rawData())
+    // console.log(this.state.week.rawData())
     
     let itemManager = ItemManager.sharedInstance()
     if (itemManager.isLock()) return
@@ -94,10 +97,14 @@ class Cell extends Component {
   }
 
   render() {
-    const { column, day, week, data } = this.props
+    const { column, day } = this.props
+    const { data } = this.state
+
     // const { data } = this.state
     let items = data || []
     let cell_id = this.cellId
+
+    console.log(data, 'render Cell' , column, day)
     return (
       <View  style={styles.todoCell}>
         {items.length > 0 ? 
@@ -133,7 +140,7 @@ class Cell extends Component {
                   nextOrderedItems.push(item)
                 }
 
-                week.updateOrder(cell_id, nextOrderedItems).then((newOrderedItems)=>{
+                this.state.week.updateOrder(cell_id, nextOrderedItems).then((newOrderedItems)=>{
                   this.props.data = newOrderedItems
                   this.sortableList.setOrder(newOrder)
 
@@ -148,7 +155,7 @@ class Cell extends Component {
             renderRow={({data, active}) =>
               <Item data={data} 
                     active={active} 
-                    week={week}
+                    week={this.state.week}
                     day={day}
                     column={column}
                     parent={this}
@@ -170,7 +177,8 @@ class Item extends Component {
 
     this.state = {
       selectedItemKey: null,
-      data: Object.assign({}, props.data)
+      data: Object.assign({}, props.data),
+      week: props.week
     }
 
     this._active = new Animated.Value(0)
@@ -214,8 +222,8 @@ class Item extends Component {
 
   _handleItemUpdate(selectedItem) {
 
-    console.log('Item _handleItemUpdate')
-    console.log(this.props.parent)
+    // console.log('Item _handleItemUpdate')
+    // console.log(this.props.parent)
 
     if (selectedItem.key == this.state.data.key) {
       // this.setState({data: selectedItem})
@@ -247,16 +255,28 @@ class Item extends Component {
       }).start()
     }
 
+    var newState = {}
+
+    if (nextProps.hasOwnProperty('week'))
+      newState['week'] = nextProps.week
+
     if (nextProps.hasOwnProperty('selectedItemKey'))
-      this.setState({selectedItemKey: nextProps.selectedItemKey})
+      newState['selectedItemKey'] = nextProps.selectedItemKey
   
     if (nextProps.hasOwnProperty('data'))
-      this.setState({data: nextProps.data})
+      newState['data'] = nextProps.data
+
+    
+      this.setState(newState)
+
+
   }
 
   render() {
-   const {day, column, week, onPress} = this.props
+   const {day, column, onPress} = this.props
    const {selectedItemKey, data} = this.state
+
+  //  console.log(data, 'render Item' , column, day)
 
     return (
       <Animated.View style={[
@@ -279,8 +299,8 @@ class Item extends Component {
             textStyle.push(styles.itemTextDone)
           }
 
-          let bounce = week.lastHandledItemsSet().has(item.key)
-          if (bounce) week.lastHandledItemsSet().delete(item.key)
+          let bounce = this.state.week.lastHandledItemsSet().has(item.key)
+          if (bounce) this.state.week.lastHandledItemsSet().delete(item.key)
 
           let note = item.note ? item.note.split('\n')[0] : undefined
 
@@ -329,18 +349,16 @@ class DynamicRow extends Component {
 
 export default class TodoColumn extends Component {
 
-  _data = null
   _cells = {}
 
   constructor(props) {
     super(props)
 
-    let week = props.week
-    let column = props.column
-
     this.state = {
       selectedItemKey: null,
-      show: true
+      show: true,
+      week: props.week,
+      data: null
     } 
   }
 
@@ -351,7 +369,16 @@ export default class TodoColumn extends Component {
       this.hide()
     }
 
-    this.loadData()
+    if (nextProps.hasOwnProperty('week')) {
+      this.setState({week: nextProps.week}, () => {
+        this.loadData(function() {
+          console.log('componentWillReceiveProps week')
+          // this.forceUpdate()
+        }.bind(this))
+      })
+    } else {
+      this.loadData()
+    }
   }
 
   show() {
@@ -363,9 +390,12 @@ export default class TodoColumn extends Component {
   }
 
   loadData(callback) {
-    let week = this.props.week
-    week.getWeekDataAtColumn(this.props.column, (data) => {
-      this._data = data
+    this.state.week.getWeekDataAtColumn(this.props.column, (data) => {
+      console.log(data, 'column', this.props.column)
+      // this._data = data
+      this.setState({
+        data: data
+      })
 
       if (callback) callback(data)
     })
@@ -374,9 +404,8 @@ export default class TodoColumn extends Component {
   componentDidMount() {
     ItemManager.sharedInstance().addListener('delete', this, this._handleItemDeleted.bind(this))
 
-    let week = this.props.week
     this.loadData(function() {
-      this.forceUpdate() 
+      // this.forceUpdate() 
     }.bind(this))
   }
 
@@ -408,18 +437,18 @@ export default class TodoColumn extends Component {
   
 
   _updateCellData(day, cellData) {
-    this._data[day] = cellData
+    this.state.data[day] = cellData ///////
   }
 
   _getCellForDay(day) {
-    const { column, week } = this.props
-    let items = this._data ? this._data[day] : [] || []
+    const { column } = this.props
     let cell_id = `${day}_${column}`
+
     return (<Cell
               day={day} 
               column={column} 
-              data={items} 
-              week={week} 
+              data={this.state.data ? this.state.data[day] : [] || []} 
+              week={this.state.week} 
               ref={(ref) => { this._cells[cell_id] = ref }}
               />)
   }

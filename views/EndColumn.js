@@ -16,7 +16,7 @@ import ItemManager from '../manager/item'
 
 export default class EndColumn extends Component {
   state = {
-    showMore: false,
+    showMore: true,
     panels: [],
     moreAlpha: new Animated.Value(1),
   }

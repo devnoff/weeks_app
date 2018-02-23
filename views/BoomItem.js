@@ -83,7 +83,7 @@ export default class BoomItem extends Component {
     ]).start((info) => {
 
       if (!info.finished) {
-        console.log('complete while animating')
+        // console.log('complete while animating')
         return
       }
 
@@ -96,6 +96,8 @@ export default class BoomItem extends Component {
 
   render() {
     let { scale, alpha } = this.state;
+
+    // console.log(alpha, 'boom item alpha')
 
     return (
       <Animated.View

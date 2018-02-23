@@ -1,16 +1,17 @@
 import React from 'react';
 import { Animated, Text, View } from 'react-native';
 
-var _panelController = null
 
 export default class Panel extends React.Component {
 
+  _panelController = null
+
   getPanelController() {
-    return _panelController
+    return this._panelController
   }
 
   setPanelController(pc) {
-    _panelController = pc
+    this._panelController = pc
   }
   
   show() {

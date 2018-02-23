@@ -3,6 +3,8 @@ import { AsyncStorage } from 'react-native'
 export default class DataManager {
 
   static async getWeekDataForKey(key) {
+
+    console.log(key, 'getWeekDataForKey')
     return new Promise(async (resolve, reject) => {
       let k = 'week_' + key
       try {
