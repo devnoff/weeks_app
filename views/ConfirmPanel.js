@@ -167,14 +167,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    fontFamily: 'courier',
-    fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
+    // fontWeight: 'bold',
     fontSize: 16,
     paddingBottom: 10,
-    marginTop: 30
+    marginTop: 30,
+    color: '#333'
   },
   description: {
-    fontFamily: 'courier',
+    fontFamily: 'Courier',
     color: '#aaa',
     fontWeight: 'normal',
     fontSize: 12,

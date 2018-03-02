@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Animated, Text, View } from 'react-native';
 
 
-export default class Panel extends React.Component {
+export default class Panel extends Component {
 
   _panelController = null
 

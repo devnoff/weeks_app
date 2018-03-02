@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {ScrollView, View, StyleSheet, Platform, RefreshControl, ViewPropTypes} from 'react-native';
 import {shallowEqual, swapArrayElements} from './utils';
 import Row from './Row';
+import _ from 'lodash'
 
 const AUTOSCROLL_INTERVAL = 100;
 const ZINDEX = Platform.OS === 'ios' ? 'zIndex' : 'elevation';
@@ -166,7 +167,8 @@ export default class SortableList extends Component {
     // console.log(data, 'sortableList data')
     // console.log(nextData, 'sortableList nextData')
 
-    if (data && nextData && !shallowEqual(data, nextData)) {
+    if (data && nextData && !_.isEqual(data, nextData)) { // shallowEqual
+      console.log(this._order, 'sortableList got new data')
       nextOrder = nextOrder || Object.keys(nextData)
       uniqueRowKey.id++;
       this._rowsLayouts = {};
@@ -185,7 +187,10 @@ export default class SortableList extends Component {
         order: nextOrder
       });
 
-    } else if (order && nextOrder && !shallowEqual(order, nextOrder)) {
+      this._onUpdateLayouts();
+
+    } else if (order && nextOrder && !_.isEqual(order, nextOrder)) { // shallowEqual
+      // console.log(this._order, 'sortableList nothing')
       this._order = nextOrder
       this.setState({order: nextOrder});
     }
@@ -196,9 +201,11 @@ export default class SortableList extends Component {
     // const {data} = this.props; //this.state
     const {data: prevData} = prevProps.data; //prevState;
 
-    if (data && prevData && !shallowEqual(data, prevData)) {
+    if (data && prevData && !_.isEqual(data, prevData)) { // shallowEqual
+      // console.log(this._order, 'sortableList layout update')
       this._onUpdateLayouts();
     }
+
   }
 
   scrollBy({dx = 0, dy = 0, animated = false}) {
@@ -307,6 +314,7 @@ export default class SortableList extends Component {
         if (horizontal) {
           location.x = nextX;
           nextX += rowsLayouts[key].width;
+          // style.width = rowsLayouts[key].width +1;
         } else {
           location.y = nextY;
           nextY += rowsLayouts[key].height;
@@ -372,12 +380,19 @@ export default class SortableList extends Component {
           let contentWidth = 0;
 
           rowsLayouts.forEach(({rowKey, layout}) => {
+            // if (rowKey == 'sun_0_0') {
+            //   console.log(rowKey, '_onUpdateLayouts', layout.width) 
+            // }
             rowsLayoutsByKey[rowKey] = layout;
             contentHeight += layout.height;
             contentWidth += layout.width;
+
+            // if (rowKey == 'sun_0_0') {
+            //   console.log(rowKey, '_onUpdateLayouts contentWidth', contentWidth) 
+            // }
           });
 
-          this._contentWidth = contentWidth
+          this._contentWidth = contentWidth + 2 //////////
 
           this.setState({
             containerLayout: {x, y, width, height, pageX, pageY},
@@ -609,6 +624,8 @@ export default class SortableList extends Component {
   }
 
   _onLayoutRow(rowKey, {nativeEvent: {layout}}) {
+    // if (rowKey == 'sun_0_0')
+    //   console.log(rowKey, 'onLayoutRow', layout.width)
     this._resolveRowLayout[rowKey]({rowKey, layout});
   }
 

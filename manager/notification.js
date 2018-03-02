@@ -8,6 +8,7 @@ __notifications = {
   cell_select_change: [],
   reset_this_week_request: [],
   import_from_prev_week_request: [],
+  import_overlay_request: [],
   prev_week_request: [],
   next_week_request: [],
   this_week_request: []

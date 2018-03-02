@@ -103,13 +103,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    fontFamily: 'courier',
-    fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
+    // fontWeight: 'bold',
     fontSize: 16,
-    marginTop: 25
+    marginTop: 25,
+    color: '#333'
   },
   description: {
-    fontFamily: 'courier',
+    fontFamily: 'Courier',
     color: '#aaa',
     fontWeight: 'normal',
     fontSize: 12,

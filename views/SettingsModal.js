@@ -52,7 +52,7 @@ export default class SettingsModal extends Component {
           show={show}
           style={styles.view}
         >
-        <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex: 1, backgroundColor: '#f6f8f1'}}>
+        <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{flex: 1, backgroundColor: '#f6f8f1'}}>
         <View style={styles.top} >
           <View style={styles.body}>
             <TouchableOpacity onPress={this._onPressClose.bind(this)} >

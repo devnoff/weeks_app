@@ -16,6 +16,7 @@ import Panel from './Panel'
 import SettingsModal from './SettingsModal'
 import ResetConfirmPanel from './ResetConfirmPanel'
 import ImportConfirmPanel from './ImportConfirmPanel'
+import Notification from '../manager/notification'
 
 export default class MorePanel extends Panel {  
   state = {
@@ -59,6 +60,8 @@ export default class MorePanel extends Panel {
             />
     }, (el) => {
     })
+
+    Notification.post('import_overlay_request')
   }
 
   _onPressResetButton() {
@@ -190,9 +193,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    fontFamily: 'courier',
-    fontWeight: 'bold',
-    fontSize: 17
+    fontFamily: 'Courier-Bold',
+    // fontWeight: 'bold',
+    fontSize: 17,
+    color: '#333'
   },
   description: {
     color: '#aaa',

@@ -11,17 +11,23 @@ import Panel from './Panel'
 import Notification from '../manager/notification'
 import WeekModel from '../models/week'
 import moment from 'moment'
+import WeekManager from '../manager/week'
 
 export default class ImportConfirmPanel extends Panel {  
   items = {}
 
   constructor(props) {
     super(props)
+
+    let week = WeekManager.getCurrentWeek()
+    console.log(week, 'ImportConfirmPanel week')
    
     this.state = {
       show: false,
       disabled: false,
-      available: true
+      available: true,
+      week: week,
+      aweekago:  new WeekModel(moment().year(week.getYear()).isoWeek(week.getWeekNumber()-1))
     }
   }
 
@@ -35,8 +41,7 @@ export default class ImportConfirmPanel extends Panel {
   }
 
   _onPressConfirmButton() {
-    let aweekago = moment().subtract(7, 'days')
-    let lastWeek = new WeekModel(aweekago)
+    let lastWeek = this.state.aweekago
     lastWeek.getData(() => {
       if (lastWeek.isEmpty()) {
         this.setState({available: false})
@@ -54,6 +59,8 @@ export default class ImportConfirmPanel extends Panel {
     console.log(keys)
     for (let i of keys) {
       let item = items[i]
+
+      if (!item) continue
 
       if (this.state.show && !item.visible) {
         done = false
@@ -76,7 +83,13 @@ export default class ImportConfirmPanel extends Panel {
 
   render() {
 
-    const { show, showSettingModal, available } = this.state
+    const { show, showSettingModal, available, week, aweekago } = this.state
+
+    let prev = aweekago.getWeekNumber()
+    let prevYear = aweekago.getYear()
+    let curr = week.getWeekNumber()
+    let currYear = week.getYear()
+
 
     return function() {
       if (!available) {
@@ -91,7 +104,7 @@ export default class ImportConfirmPanel extends Panel {
             to={10} 
             show={show} >
             <Text style={styles.description}>
-              Last week is is empty
+              Nothing to import in previous week {prevYear}#{prev}
             </Text>
           </SlideItem>
         </View>
@@ -108,7 +121,7 @@ export default class ImportConfirmPanel extends Panel {
               to={10} 
               show={show} >
               <Text style={styles.description}>
-                Will you import To-do items from last week? You will lose existing items in current week.
+                Will you import to-do items from previous week {prevYear}#{prev} to current week {currYear}#{curr}?
               </Text>
             </SlideItem>
             <SlideItem 
@@ -142,13 +155,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    fontFamily: 'courier',
-    fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
+    // fontWeight: 'bold',
     fontSize: 16,
-    marginTop: 25
+    marginTop: 25,
+    color: '#333'
   },
   description: {
-    fontFamily: 'courier',
+    fontFamily: 'Courier',
     color: '#aaa',
     fontWeight: 'normal',
     fontSize: 12,

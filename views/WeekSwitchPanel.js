@@ -7,7 +7,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Animated
+  Animated,
+  Dimensions
 } from 'react-native';
 import FadeItem from './FadeItem'
 import Panel from './Panel'
@@ -15,6 +16,9 @@ import CreateItemModal from './CreateItemModal'
 import Notification from '../manager/notification'
 import WeekManager from '../manager/week'
 import ItemManager from '../manager/item'
+import { isIphoneX } from 'react-native-iphone-x-helper'
+
+const smallScreen = Dimensions.get('window').width < 680
 
 export default class WeekSwitchPanel extends Panel {  
 
@@ -55,6 +59,7 @@ export default class WeekSwitchPanel extends Panel {
   }
 
   _handlePressPrevButton() {
+    ReactNativeHapticFeedback.trigger()
     Notification.post('prev_week_request')
     this.setState({
       year: WeekManager.getCurrentWeek().getYear(),
@@ -65,6 +70,7 @@ export default class WeekSwitchPanel extends Panel {
   }
 
   _handlePressNextButton() {
+    ReactNativeHapticFeedback.trigger()
     Notification.post('next_week_request')
     this.setState({
       year: WeekManager.getCurrentWeek().getYear(),
@@ -115,12 +121,15 @@ export default class WeekSwitchPanel extends Panel {
           <TouchableOpacity onPress={this._handlePressPrevButton.bind(this)}>
             <View style={styles.buttonBox}>
               {/* <Text style={styles.buttonText}>Prev. Week</Text> */}
-              <Icon name="chevron-up" size={32} />
+              <Icon color="#333" name="chevron-up" size={32} />
             </View>
           </TouchableOpacity>
         </View>
         <TouchableOpacity onLongPress={this._handleLongPressWeekButton.bind(this)} onPress={this._handlePressCloseButton.bind(this)} style={styles.weekBox}>
           <View style={styles.weekView}>
+            <View style={styles.selectBox}>
+              <Text style={styles.select}>PRESS TO SELECT</Text>
+            </View>
             <Text style={styles.weekText}>{year}<Text style={styles.weekNum}>#{week_no}</Text></Text>
             <Text style={styles.periodText}>{start_date_str}{"\n"}~ {end_date_str}</Text>
           </View>
@@ -129,7 +138,7 @@ export default class WeekSwitchPanel extends Panel {
           <TouchableOpacity onPress={this._handlePressNextButton.bind(this)}>
             <View style={styles.buttonBox}>
               {/* <Text style={styles.buttonText}>Next Week</Text> */}
-              <Icon name="chevron-down" size={32} />
+              <Icon color="#333" name="chevron-down" size={32} />
             </View>
           </TouchableOpacity>
         </View>
@@ -145,8 +154,9 @@ const styles = StyleSheet.create({
   },
   weekBox: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
+    marginLeft: isIphoneX() ? 10 : 0,
   },
   weekView: {
     flex: 1,
@@ -157,17 +167,21 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red'
   },
   weekText: {
-    fontWeight: 'bold',
-    fontFamily: 'courier',
-    fontSize: 22
+    // fontWeight: '700',
+    fontFamily: 'Courier-Bold',
+    fontSize: !smallScreen ? 20 : 18,
+    color: '#333',
+    lineHeight: !smallScreen ? 24 : 22,
   },
   weekNum: {
-    fontSize: 24
+    fontSize: !smallScreen ? 24 : 22,
   },
   periodText: {
-    fontFamily: 'courier',
-    fontSize: 12,
+    fontFamily: 'Courier',
+    fontSize: !smallScreen ? 12 : 11,
     color: '#aaa',
+    marginTop: 3,
+    lineHeight: !smallScreen ? 13 : 12
   },
   buttonView: {
     flex: 1,
@@ -183,8 +197,21 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     textAlign: 'left',
-    fontWeight: 'bold',
-    fontFamily: 'courier',
+    // fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
     fontSize: 14,
   },
+  selectBox: {
+    // height: 14,
+    backgroundColor: 'black',
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderColor: '#000',
+    marginBottom: 5,
+  },
+  select: {
+    color: 'white',
+    fontSize: 8
+  }
 })

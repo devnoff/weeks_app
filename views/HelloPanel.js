@@ -7,7 +7,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Animated
+  Animated,
+  Dimensions
 } from 'react-native';
 import FadeItem from './FadeItem'
 import Panel from './Panel'
@@ -16,6 +17,9 @@ import Notification from '../manager/notification'
 import WeekManager from '../manager/week'
 import WeekSwitchPanel from './WeekSwitchPanel'
 import ItemManager from '../manager/item'
+import { isIphoneX } from 'react-native-iphone-x-helper'
+
+const smallScreen = Dimensions.get('window').width < 680
 
 export default class HelloPanel extends Panel {  
 
@@ -98,7 +102,7 @@ export default class HelloPanel extends Panel {
         <View style={styles.buttonView}>
           <TouchableOpacity onPress={this._handlePressAddButton.bind(this)}>
             <View style={styles.buttonBox}>
-                <Icon name="plus" size={30}/>  
+                <Icon color="#333" name="plus" size={30}/>  
             </View>
           </TouchableOpacity>
         </View>
@@ -121,18 +125,21 @@ const styles = StyleSheet.create({
     paddingLeft: 10
   },
   weekText: {
-    fontWeight: 'bold',
-    fontFamily: 'courier',
-    fontSize: 20
+    // fontWeight: '700',
+    fontFamily: 'Courier-Bold',
+    fontSize: !smallScreen ? 20 : 18,
+    color: '#333',
+    lineHeight: !smallScreen ? 24 : 22,
   },
   weekNum: {
-    fontSize: 24
+    fontSize: !smallScreen ? 24 : 22,
   },
   periodText: {
-    fontFamily: 'courier',
-    fontSize: 12,
+    fontFamily: 'Courier',
+    fontSize: !smallScreen ? 12 : 11,
     color: '#aaa',
-    marginTop: 5
+    marginTop: 3,
+    lineHeight: !smallScreen ? 13 : 12
   },
   buttonView: {
     flex: 1,

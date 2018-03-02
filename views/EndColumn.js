@@ -129,9 +129,9 @@ export default class EndColumn extends Component {
 
   _getMoreEl() {
     if (this.panelController.getCount() < 2)
-      return <Icon name="equal" size={30}/>
+      return <Icon color="#333" name="equal" size={30}/>
     else
-      return <Icon name="chevron-left" size={30}/>  
+      return <Icon color="#333" name="chevron-left" size={30}/>  
   }
 
   render() {
@@ -139,7 +139,7 @@ export default class EndColumn extends Component {
     const { showModal, showMore, moreAlpha } = this.state
 
     return (
-      <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png') : null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex:1, backgroundColor: '#eee'}}>
+      <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png') : null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{flex:1, backgroundColor: '#eee'}}>
         <View style={styles.view}>
           <View style={styles.moreView}>
             <TouchableOpacity disabled={!showMore} onPress={this._onPressMoreButton.bind(this)}>

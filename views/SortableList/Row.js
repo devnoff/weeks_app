@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   },
   horizontalContainer: {
     top: 0,
-    bottom: 0,
+    bottom: 0
   },
   verticalContainer: {
     left: 0,

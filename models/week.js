@@ -1,8 +1,13 @@
 import { AsyncStorage } from 'react-native'
+import {
+  Dimensions
+} from 'react-native';
 import moment from 'moment'
 import DataManager from '../manager/data'
 import dummy from '../data/dummy'
 import _ from 'lodash'
+
+const smallScreen = Dimensions.get('window').width < 680
 
 export default class WeekModel {
 
@@ -24,9 +29,9 @@ export default class WeekModel {
     this._number = d.isoWeek()
     this._week_id = `${d.year()}_${this._number}` // e.g. 2018_1
     this._date_start = moment(d).startOf('isoWeek')
-    console.log(this._week_id)
+    // console.log(this._week_id)
     this._date_end = moment(d).endOf('isoWeek')
-    console.log(this._date_end)
+    // console.log(this._date_end)
 
     
     // DataManager.setWeekDataForKey('2018_7', this._data)
@@ -52,11 +57,11 @@ export default class WeekModel {
   }
 
   getStartDateStr = () => {
-    return this._date_start.format('D MMM YYYY')
+    return this._date_start.format(smallScreen ? 'D MMM \'YY' :'D MMM YYYY')
   }
 
   getEndDateStr = () => {
-    return this._date_end.format('D MMM YYYY')
+    return this._date_end.format(smallScreen ? 'D MMM \'YY' :'D MMM YYYY')
   }
 
   lastHandledItemsSet = () => {
@@ -92,10 +97,9 @@ export default class WeekModel {
     else {
       try {
         this._data = await DataManager.getWeekDataForKey(this._week_id)
-        console.log('getData')
         console.log(this._data, 'loadData new')
         if (!this._data) {
-          this._data = require('../data/initial_data.json')
+          this._data = Object.assign({}, require('../data/initial_data.json'))
           this._data.week_id = this._week_id
         }
         callback(this._data)

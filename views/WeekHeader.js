@@ -59,7 +59,11 @@ export default class WeekHeader extends Component {
         to={0} 
         fade={1}
       >
-        <View style={styles.view}>
+        <View style={{
+          flex: isIphoneX() ? 2 : 0.8,
+          flexDirection: 'row',
+          overflow: 'hidden'
+        }}>
           <View style={styles.iconBox}>
             <Icon style={{color:"#aaa"}} name="unfold-more-vertical"/>
           </View>
@@ -96,7 +100,8 @@ const styles = StyleSheet.create({
   textBox: {
     flex:1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    // backgroundColor: 'red'
   },
   textBoxSelected: {
     // borderWidth: 0.5,
@@ -108,8 +113,12 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   text: {
-    fontWeight: 'bold',
-    fontFamily: 'courier',
+    // fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
+    color: '#333',
+    // backgroundColor: 'white',
+    fontSize: 14,
+    lineHeight: 15
   },
   sunText: {
     color: 'brown'

@@ -74,7 +74,7 @@ export default class ItemManager {
     var idx = -1
     let l = this._listeners[category]
     for (var i in l) {
-      if (Object.is(l[i].owner, owner)) {
+      if (l[i].owner == owner) {
         idx = i
         break
       }

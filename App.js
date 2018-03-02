@@ -7,7 +7,7 @@ import { isIphoneX } from 'react-native-iphone-x-helper'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import React, { Component } from 'react';
 import {
-  View, ImageBackground, StyleSheet, Platform, AppState, Text
+  View, ImageBackground, StyleSheet, Platform, AppState, Text, StatusBar
 } from 'react-native';
 import WeekHeader from './views/WeekHeader'
 import TodoColumn from './views/TodoColumn'
@@ -26,7 +26,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import DataManager from './manager/data'
 
-// console.log = ()=>{}
+console.log = ()=>{}
 
 console.ignoredYellowBox = ['Remote debugger'];
 
@@ -44,7 +44,7 @@ export default class App extends Component {
       selectionMode: false,
       showCreateOverlay: false,
       showWeekSelector: false,
-      visible: true,
+  
       week: new WeekModel()
     }
 
@@ -52,6 +52,10 @@ export default class App extends Component {
     console.log(this.state.week.isCurrentWeek())
 
 
+  }
+
+  componentWillMount() {
+    StatusBar.setHidden(true);
   }
 
   componentDidMount() {
@@ -62,6 +66,7 @@ export default class App extends Component {
     Notification.addListener('delete_overlay_request',this, this._handleDeleteRequest.bind(this))
     Notification.addListener('reset_this_week_request',this, this._handleResetThisWeek.bind(this))
     Notification.addListener('import_from_prev_week_request',this, this._handleImportFromLastWeek.bind(this))
+    // Notification.addListener('import_overlay_request',this, this._handleImportOverlayRequest.bind(this))
     Notification.addListener('prev_week_request',this, this._handleRequestPrevWeek.bind(this))
     Notification.addListener('next_week_request',this, this._handleRequestNextWeek.bind(this))
     Notification.addListener('this_week_request',this, this._handleRequestThisWeek.bind(this))
@@ -75,10 +80,18 @@ export default class App extends Component {
     Notification.removeListener('dupliate_overlay_request', this)
     Notification.removeListener('reset_this_week_request', this)
     Notification.removeListener('import_from_prev_week_request', this)
+    // Notification.removeListener('import_overlay_request', this)
     Notification.removeListener('prev_week_request', this)
     Notification.removeListener('next_week_request', this)
     Notification.removeListener('this_week_request', this)
   }
+
+  /*
+   * Will implement next version
+   */
+  // _handleImportOverlayRequest() {
+  //   this.setState({ showWeekSelector: true})
+  // }
 
   _handleWeekSelectorRequest() {
     // 1. Present week selector modal
@@ -133,7 +146,7 @@ export default class App extends Component {
     console.log('_handleDuplicateRequest')
 
     // Show Create Modal
-    self.setState({ selectionMode: true, showCreateOverlay: false, visible: true })
+    self.setState({ selectionMode: true, showCreateOverlay: false })
     
     let endCol = self.endColumn
     let pc = endCol.panelController
@@ -164,14 +177,14 @@ export default class App extends Component {
           pc.popToRootPanel()
           endCol.moreButtonFadeIn()
           ItemManager.sharedInstance().setSelectedItem(null)
-          self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+          self.setState({ showCreateOverlay: false, selectionMode: false })
         })
         CellSelectionController.sharedInstance().reset()
       }
 
       duplicatePanel.onCancel = () => {
         ItemManager.sharedInstance().setSelectedItem(item)
-        self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+        self.setState({ showCreateOverlay: false, selectionMode: false })
         CellSelectionController.sharedInstance().reset()
       }
     })
@@ -183,7 +196,7 @@ export default class App extends Component {
     console.log('_handleEditRequest')
 
     // Show Create Modal
-    self.setState({ showCreateOverlay: true, selectionMode: false, visible: false })
+    self.setState({ showCreateOverlay: true, selectionMode: false })
     
     let endCol = self.endColumn
     let pc = endCol.panelController
@@ -207,21 +220,20 @@ export default class App extends Component {
 
         item = _.cloneDeep(item) /* To release memory pointers in where the old item data is used */
 
-        self.setState({ visible: true })
+        // self.setState( })
+
+        ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
 
         self.state.week.updateToDoItem(item).then(() => {
+          // ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
 
-          self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+          self.setState({ showCreateOverlay: false, selectionMode: false },
+          ()=> {
+            ItemManager.sharedInstance().setSelectedItem(item)
+          })
           // ItemManager.sharedInstance().needUpdateSelectedItem(item)
 
-          endCol.moreButtonFadeIn()
-
-          // Hide Close Overlay & Switch to cell select mode
-          
-
-          ItemManager.sharedInstance().setSelectedItem(item)
-          ItemManager.sharedInstance().needUpdateSelectedItemLayout(item)
-          
+          // endCol.moreButtonFadeIn()
         }).catch((e) => {
 
         })
@@ -235,8 +247,12 @@ export default class App extends Component {
           
         // })
         // endCol.moreButtonFadeIn()
-        ItemManager.sharedInstance().setSelectedItem(item)
-        self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+
+        this.createModal.hideKeyBoard()
+        setTimeout(()=>{
+          ItemManager.sharedInstance().setSelectedItem(item)
+          self.setState({ showCreateOverlay: false, selectionMode: false })
+        }, 700)
       }
     })
   }
@@ -248,7 +264,7 @@ export default class App extends Component {
     console.log('_handleCreateRequest')
 
     // Show Create Modal
-    self.setState({ showCreateOverlay: true, visible: false })
+    self.setState({ showCreateOverlay: true })
 
     var newItem = null
     
@@ -320,7 +336,7 @@ export default class App extends Component {
               })
               endCol.moreButtonFadeIn()
               ItemManager.sharedInstance().reset()
-              self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+              self.setState({ showCreateOverlay: false, selectionMode: false })
               // self.forceUpdate()
             }).catch((e) => {
 
@@ -333,20 +349,24 @@ export default class App extends Component {
           selectPanel.onCancel = () => {
             pc.popToRootPanel()
             endCol.moreButtonFadeIn()
-            self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+            self.setState({ showCreateOverlay: false, selectionMode: false })
             CellSelectionController.sharedInstance().reset()
           }
         })
 
         // Hide Close Overlay & Switch to cell select mode
-        self.setState({ showCreateOverlay: false, selectionMode: true, visible: true })
+        self.setState({ showCreateOverlay: false, selectionMode: true })
 
       }
 
       createPanel.onCancel = () => {
-        pc.popToRootPanel()
-        endCol.moreButtonFadeIn()
-        self.setState({ showCreateOverlay: false, selectionMode: false, visible: true })
+
+        this.createModal.hideKeyBoard()
+        setTimeout(()=>{
+          pc.popToRootPanel()
+          endCol.moreButtonFadeIn()
+          self.setState({ showCreateOverlay: false, selectionMode: false })
+        }, 700)
       }
     })
   }
@@ -392,7 +412,6 @@ export default class App extends Component {
     this.setState({
       week: newWeek
     })
-    // this.forceUpdate()
   }
 
   render() {
@@ -405,7 +424,7 @@ export default class App extends Component {
 
     return (
       <View style={{flex: 1}}>
-        <ImageBackground source={Platform.OS === 'ios' ? require('./images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex: 1, flexDirection: 'row', backgroundColor: '#f6f8f1'}}>
+        <ImageBackground source={Platform.OS === 'ios' ? require('./images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{flex: 1, flexDirection: 'row', backgroundColor: '#f6f8f1'}}>
           {function(){
             if (iphoneX) 
               return (<View style={{flex: 1}}></View>)
@@ -426,14 +445,14 @@ export default class App extends Component {
             flexDirection: 'column',
             // zIndex: 200
           }}>
-          { !visible ? undefined : selectionMode ?
+          { /*!visible ? undefined : */selectionMode ?
             <SelectionColumn 
               column={0} 
-              icon={(<Icon size={20} name="weather-sunset"/>)}/> :
+              icon={(<Icon color="#333" size={20} name="weather-sunset"/>)}/> :
             (<TodoColumn
               ref={(ref) => { this.todoColumn1 = ref }}
               column={0} 
-              icon={(<Icon size={20} name="weather-sunset"/>)}
+              icon={(<Icon color="#333" size={20} name="weather-sunset"/>)}
               week={week}
             />)}
             
@@ -444,14 +463,14 @@ export default class App extends Component {
             borderRightWidth: 1,
             // zIndex: 300
           }}>
-          { !visible ? undefined : selectionMode ?
+          { /*!visible ? undefined : */selectionMode ?
             <SelectionColumn 
               column={1} 
-              icon={(<Icon size={20} name="weather-sunny"/>)}/> :
+              icon={(<Icon color="#333" size={20} name="weather-sunny"/>)}/> :
             (<TodoColumn
               ref={(ref) => { this.todoColumn2 = ref }}
               column={1} 
-              icon={(<Icon size={20} name="weather-sunny"/>)}
+              icon={(<Icon color="#333" size={20} name="weather-sunny"/>)}
               week={week}
             />)}
           </View>
@@ -461,14 +480,14 @@ export default class App extends Component {
             borderRightWidth: 5,
             // zIndex: 400
           }}>
-          { !visible ? undefined : selectionMode ?
+          { /*!visible ? undefined : */selectionMode ?
             <SelectionColumn 
               column={2} 
-              icon={(<Icon size={20} name="weather-night"/>)}/> :
+              icon={(<Icon color="#333" size={20} name="weather-night"/>)}/> :
             (<TodoColumn
               ref={(ref) => { this.todoColumn3 = ref }}
               column={2} 
-              icon={(<Icon size={20} name="weather-night"/>)}
+              icon={(<Icon color="#333" size={20} name="weather-night"/>)}
               week={week}
             />)}
           </View>
@@ -480,7 +499,7 @@ export default class App extends Component {
           </View>
           {function(){
             if (iphoneX) 
-              return (<ImageBackground source={Platform.OS === 'ios' ? require('./images/3.png') : null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex:1, backgroundColor: '#eee'}}/>)
+              return (<ImageBackground source={Platform.OS === 'ios' ? require('./images/3.png') : null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{flex:1, backgroundColor: '#eee'}}/>)
             else ''
           }()}
         </ImageBackground>

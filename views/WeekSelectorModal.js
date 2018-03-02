@@ -124,7 +124,7 @@ export default class WeekSelectorModal extends Component {
           
 
           return (
-            <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{backgroundColor: '#f6f8f1'}}>
+            <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{backgroundColor: '#f6f8f1'}}>
               <FlatList 
                 ref={(ref) => { this._list = ref }}
                 data={data}
@@ -187,8 +187,8 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   yearText: {
-    fontWeight: 'bold',
-    fontFamily: 'courier',
+    // fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
     fontSize: 18,
     color: '#fff'
   },
@@ -201,8 +201,8 @@ const styles = StyleSheet.create({
     borderWidth: 1
   },
   weekTitle: {
-    fontWeight: 'bold',
-    fontFamily: 'courier',
+    // fontWeight: 'bold',
+    fontFamily: 'Courier-Bold',
     fontSize: 18
   },
   weekDesc: {

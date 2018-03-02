@@ -18,7 +18,8 @@ export default class CreateItemModal extends Component {
     this.state = {
       title: props.item ? props.item.title : null,
       note: props.item ? props.item.note : null,
-      show: false
+      show: false,
+      disabled: false
     }
   }
 
@@ -39,8 +40,10 @@ export default class CreateItemModal extends Component {
   }
 
   componentDidMount() {
-    if (this.titleInput)
+    setTimeout(()=>{
+      if (this.titleInput)
       this.titleInput.focus()
+    }, 700)
 
     this.show()
   }
@@ -49,11 +52,20 @@ export default class CreateItemModal extends Component {
     this.setState(nextProps)
   }
 
+  hideKeyBoard() {
+    this.titleInput.blur()
+    this.setState({
+      disabled: true
+    })
+  }
+
   _onPressLeft() {
+    if (this.state.disabled) return
     this.titleInput.focus()
   }
 
   _onPressRight() {
+    if (this.state.disabled) return
     this.noteInput.focus()
   }
 
@@ -67,23 +79,25 @@ export default class CreateItemModal extends Component {
   }
 
   render() {
-    const { show } = this.state
+    const { show, disabled } = this.state
     return (
         <View 
           // show={show}
           // delay={100}
           style={styles.view}
         >
-        <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : 'none'} style={{flex: 1, backgroundColor: '#f6f8f1'}}>
+        <ImageBackground source={Platform.OS === 'ios' ? require('../images/3.png'): null} resizeMode={Platform.OS === 'ios' ? "repeat" : undefined} style={{flex: 1, backgroundColor: '#f6f8f1'}}>
         <View style={styles.top} >
           <View style={styles.body}>
             <TouchableWithoutFeedback onPress={this._onPressLeft.bind(this)}>
               <View style={styles.titleView}>
                 <TextInput
                   ref={(input) => {this.titleInput = input}}
+                  underlineColorAndroid='rgba(0,0,0,0)'
                   isFocused={true}
                   style={styles.titleInput}
                   placeholder="Title"
+                  editable={!disabled}
                   onChangeText={(title) => {
                     this.setState({title})
                     Notification.post('title_text_input_change', title)
@@ -99,6 +113,8 @@ export default class CreateItemModal extends Component {
                 style={styles.noteInput}
                 multiline={true}
                 placeholder="Note"
+                editable={!disabled}
+                underlineColorAndroid='rgba(0,0,0,0)'
                 onChangeText={(note) => this.setState({note})}
                 value={this.state.note}
               />

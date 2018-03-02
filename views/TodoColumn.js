@@ -32,9 +32,28 @@ class Cell extends Component {
 
     this.state = {
       data: props.data,
-      week: props.week
+      week: props.week,
+      reset: false
     }
 
+  }
+
+  _handleItemUpdateLayout(item) {
+    let arr = item.key.split('_')
+    let week_id = `${arr[0]}_${arr[1]}`
+    if (week_id == this.cellId) {
+      this.setState({
+        reset: true
+      })
+    }
+  }
+
+  componentDidMount() {
+    ItemManager.sharedInstance().addListener('updateLayout', this, this._handleItemUpdateLayout.bind(this))
+  }
+
+  componentWillUnmount() {
+    ItemManager.sharedInstance().removeListener('updateLayout', this)
   }
 
   setDeletedItem(item) {
@@ -54,7 +73,9 @@ class Cell extends Component {
 
   componentWillReceiveProps(nextProps) {
 
-    var newState = {}
+    var newState = {
+      reset: false
+    }
     if (nextProps.hasOwnProperty('week')) {
       newState['week'] = nextProps.week
     }
@@ -63,7 +84,9 @@ class Cell extends Component {
       newState['data'] = nextProps.data
     }
 
-    if (newState.hasOwnProperty('week') && newState.hasOwnProperty('data')) {
+    if (newState.hasOwnProperty('week') && this.state.week != nextProps.week) { 
+      //newState.hasOwnProperty('data')
+      console.log('column refreshing !')
       this.setState({data : null}, () => {
         this.setState(newState)    
       })
@@ -96,18 +119,22 @@ class Cell extends Component {
     }
   }
 
+  getParent() {
+    return this.sortableList
+  }
+
   render() {
     const { column, day } = this.props
-    const { data } = this.state
+    const { data, reset } = this.state
 
     // const { data } = this.state
     let items = data || []
     let cell_id = this.cellId
 
-    console.log(data, 'render Cell' , column, day)
+    // console.log(data, 'render Cell' , column, day)
     return (
       <View  style={styles.todoCell}>
-        {items.length > 0 ? 
+        { !reset && items.length > 0 ? 
           <SortableList
             horizontal
             ref={(ref) => {this.sortableList = ref}}
@@ -124,7 +151,7 @@ class Cell extends Component {
             }.bind(this)()}
             onChangeOrder={(nextOrderkeys) => {
               this._nextOrder = nextOrderkeys
-              console.log(`Next ORDER : ${this._nextOrder.join('-')}`)
+              // console.log(`Next ORDER : ${this._nextOrder.join('-')}`)
             }}
             onReleaseRow={() => {
               if (this._nextOrder) {
@@ -158,7 +185,7 @@ class Cell extends Component {
                     week={this.state.week}
                     day={day}
                     column={column}
-                    parent={this}
+                    parent={this.getParent}
               />
             }
             />
@@ -177,8 +204,9 @@ class Item extends Component {
 
     this.state = {
       selectedItemKey: null,
-      data: Object.assign({}, props.data),
-      week: props.week
+      data: props.data, // Object.assign({}, props.data),
+      week: props.week,
+      layout: null
     }
 
     this._active = new Animated.Value(0)
@@ -226,14 +254,15 @@ class Item extends Component {
     // console.log(this.props.parent)
 
     if (selectedItem.key == this.state.data.key) {
-      // this.setState({data: selectedItem})
-      this.forceUpdate()
+      this.setState({data: selectedItem})
+      // this.forceUpdate()
     }
   }
 
   componentDidMount() {
     ItemManager.sharedInstance().addListener('update', this, this._handleItemUpdate.bind(this))
     ItemManager.sharedInstance().addListener('change', this, this._handleItemsSelectionChange.bind(this))
+    
 
     let selectedItem = ItemManager.sharedInstance().getSelectedItem()
     this.setState({
@@ -255,6 +284,12 @@ class Item extends Component {
       }).start()
     }
 
+    var needUpdate = this.state.data && !_.isEqual(this.state.data, nextProps.data)
+    // if (this.data && this.data.key == 'sun_0_0') {
+    //   console.log(this.state.data, 'curr data')
+    //   console.log(nextProps.data, 'next data')
+    // }
+
     var newState = {}
 
     if (nextProps.hasOwnProperty('week'))
@@ -265,18 +300,41 @@ class Item extends Component {
   
     if (nextProps.hasOwnProperty('data'))
       newState['data'] = nextProps.data
-
     
-      this.setState(newState)
+    this.setState(newState, () => {
+      if (needUpdate) {
+        console.log('force updating')
+        // this.forceUpdate()
+      }
+    })
 
 
   }
 
-  render() {
-   const {day, column, onPress} = this.props
-   const {selectedItemKey, data} = this.state
+  _onLayout(item, e) {
+    const {x,y,width,height } = e.nativeEvent.layout
 
-  //  console.log(data, 'render Item' , column, day)
+    console.log(this._parent)
+
+    if (this._parent) this._parent.onResize(e.nativeEvent.layout)
+
+
+    // this.setState({
+    //   layout: e.nativeEvent.layout
+    // })
+    // if (item.key == 'sun_0_0')
+      console.log(item.key, 'Item onLayout', width)
+  }
+
+  render() {
+    const {day, column, onPress} = this.props
+    const {selectedItemKey, data, layout} = this.state
+
+    // if (data.key == 'sun_0_0') {
+    //   console.log(data.key, 'render Item')
+    // }
+
+    //  console.log(data, 'render Item' , column, day)
 
     return (
       <Animated.View style={[
@@ -305,11 +363,13 @@ class Item extends Component {
           let note = item.note ? item.note.split('\n')[0] : undefined
 
           let el = (
-            <View style={styles.itemBox}>
-              <View style={itemStyle}>
-                <Text style={textStyle}>{item.title}</Text>
-                {note ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
-              </View>
+            <View 
+              ref={(ref) => { this.container = ref }} 
+              style={[itemStyle, layout ? {width: layout.width } : undefined]} 
+              onLayout={this._onLayout.bind(this, item)}
+            >
+              <Text style={textStyle}>{item.title}</Text>
+              {note && note.length > 0 ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
             </View>
           )
           return <BoomItem scale={bounce ? 0.9 : 1} delay={500}>{el}</BoomItem>;
@@ -369,10 +429,9 @@ export default class TodoColumn extends Component {
       this.hide()
     }
 
-    if (nextProps.hasOwnProperty('week')) {
+    if (nextProps.hasOwnProperty('week')) { //  && this.state.week.weekId() != nextProps.week.weekId()
       this.setState({week: nextProps.week}, () => {
         this.loadData(function() {
-          console.log('componentWillReceiveProps week')
           // this.forceUpdate()
         }.bind(this))
       })
@@ -391,7 +450,7 @@ export default class TodoColumn extends Component {
 
   loadData(callback) {
     this.state.week.getWeekDataAtColumn(this.props.column, (data) => {
-      console.log(data, 'column', this.props.column)
+      // console.log(data, 'column', this.props.column)
       // this._data = data
       this.setState({
         data: data
@@ -493,10 +552,12 @@ export default class TodoColumn extends Component {
 
 const styles = StyleSheet.create({
   todoCell: {
-    flex: isIphoneX() ? 2 : 1
+    flex: isIphoneX() ? 2 : 1,
+    // backgroundColor: 'blue',
+    justifyContent: 'center',
   },
   headerCell: {
-    flex: isIphoneX() ? 2 : 1,
+    flex: isIphoneX() ? 2 : 0.8,
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -504,8 +565,10 @@ const styles = StyleSheet.create({
 
   },
   list: {
-    marginTop: 6,
-    flex: 1,
+    // marginTop: 6,
+    // flex: 1,
+    // backgroundColor: 'orange',
+    height: 33
   },
   contentContainer: {
 
@@ -524,6 +587,7 @@ const styles = StyleSheet.create({
   itemBox: {
     // flex: 1,
     justifyContent: 'center',
+    // backgroundColor: 'blue',
   },
   item: {
     borderRadius: 8,
@@ -535,7 +599,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 2,
-    paddingRight: 2
+    paddingRight: 2,
   },
   itemFill: {
     // backgroundColor: '#eee',
@@ -553,9 +617,11 @@ const styles = StyleSheet.create({
   itemText: {
     color: '#333',
     fontSize: 15,
+    lineHeight: 16,
+    overflow: 'visible',
     fontWeight: 'bold',
-    paddingHorizontal: 1
-
+    paddingHorizontal: 2,
+    // backgroundColor: 'red'
   },
   itemTextFill: {
     color: '#ccc'

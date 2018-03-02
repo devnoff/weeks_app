@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.weeks"
-    android:versionCode="1"
+    android:versionCode="3"
     android:versionName="1.0">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -18,6 +18,7 @@
       android:theme="@style/AppTheme">
       <activity
         android:name=".MainActivity"
+          android:screenOrientation="sensorLandscape"
         android:label="@string/app_name"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
         android:windowSoftInputMode="adjustResize">
@@ -27,6 +28,9 @@
         </intent-filter>
       </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="a3d68f128bdd2af22105b3a0c2457f2ac4e61f74" />
     </application>
 
 </manifest>
