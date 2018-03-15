@@ -86,7 +86,7 @@ export default class Overlay extends Component {
             pointerEvents="box-none"
             style={[styles.content, this.props.style, {
             opacity: fade,
-            backgroundColor:'#fff',
+            backgroundColor:'#f6f8f1',
             }]}
           >
             {this.props.children}

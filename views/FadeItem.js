@@ -59,18 +59,20 @@ export default class FadeItem extends Component {
   }
 
   hide(option) {
+    console.log('FadeItem hide')
+
     Animated.sequence([
       Animated.delay(option.delay), // Option
-      Animated.parallel([
-        Animated.timing(                  
-          this.state.fade,
-          {
-            toValue: 0,                   
-            duration: this.props.duration || 100,             
-          }
-        )
-      ])
+      Animated.timing(                  
+        this.state.fade,
+        {
+          toValue: 0,                   
+          duration: this.props.duration || 100,             
+        }
+      )
     ]).start((info) => {
+
+      console.log('FadeItem hide finished')
 
       if (!info.finished) return
 

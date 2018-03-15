@@ -6,6 +6,7 @@ import moment from 'moment'
 import DataManager from '../manager/data'
 import dummy from '../data/dummy'
 import _ from 'lodash'
+import strings from '../i18n/localization'
 
 const smallScreen = Dimensions.get('window').width < 680
 
@@ -57,11 +58,11 @@ export default class WeekModel {
   }
 
   getStartDateStr = () => {
-    return this._date_start.format(smallScreen ? 'D MMM \'YY' :'D MMM YYYY')
+    return this._date_start.format(smallScreen ? strings.date_format_short : strings.date_format)
   }
 
   getEndDateStr = () => {
-    return this._date_end.format(smallScreen ? 'D MMM \'YY' :'D MMM YYYY')
+    return this._date_end.format(smallScreen ? strings.date_format_short : strings.date_format)
   }
 
   lastHandledItemsSet = () => {
@@ -91,15 +92,15 @@ export default class WeekModel {
     // this._data = dummy
     // this._data = require('../data/initial_data')
     if (this._data != null) {
-      console.log(this._data, 'loadData exist data')
+      // console.log(this._data, 'loadData exist data')
       return callback(this._data)
     }
     else {
       try {
         this._data = await DataManager.getWeekDataForKey(this._week_id)
-        console.log(this._data, 'loadData new')
+        // console.log(this._data, 'loadData new')
         if (!this._data) {
-          this._data = Object.assign({}, require('../data/initial_data.json'))
+          this._data = _.cloneDeep(require('../data/initial_data.json'))
           this._data.week_id = this._week_id
         }
         callback(this._data)
@@ -278,7 +279,7 @@ export default class WeekModel {
   }
 
   reset() {
-    this._data = require('../data/initial_data')
+    this._data = _.cloneDeep(require('../data/initial_data.json'))
     return new Promise((resolve, reject) => {
       try {
         DataManager.setWeekDataForKey(this._week_id, this._data)
@@ -305,6 +306,18 @@ export default class WeekModel {
     }
 
     return count < 1
+  }
+
+  setPropertyValue(key, value) {
+    this._data[key] = value
+    return new Promise((resolve, reject) => {
+      try {
+        DataManager.setWeekDataForKey(this._week_id, this._data)
+        resolve()
+      } catch (e) {
+        reject(e)
+      }
+    })
   }
 
 }

@@ -12,6 +12,7 @@ import Notification from '../manager/notification'
 import WeekModel from '../models/week'
 import moment from 'moment'
 import WeekManager from '../manager/week'
+import strings from '../i18n/localization'
 
 export default class ImportConfirmPanel extends Panel {  
   items = {}
@@ -104,7 +105,7 @@ export default class ImportConfirmPanel extends Panel {
             to={10} 
             show={show} >
             <Text style={styles.description}>
-              Nothing to import in previous week {prevYear}#{prev}
+              {strings.nothing}
             </Text>
           </SlideItem>
         </View>
@@ -121,7 +122,7 @@ export default class ImportConfirmPanel extends Panel {
               to={10} 
               show={show} >
               <Text style={styles.description}>
-                Will you import to-do items from previous week {prevYear}#{prev} to current week {currYear}#{curr}?
+                {strings.formatString(strings.import_confirm_desc,`${prevYear}#${prev}`, `${currYear}#${curr}`)}
               </Text>
             </SlideItem>
             <SlideItem 
@@ -134,7 +135,7 @@ export default class ImportConfirmPanel extends Panel {
               show={show} >
               <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
                 <Text style={styles.title}>
-                  Import
+                  {strings.confirm}
                 </Text>
               </TouchableOpacity>
             </SlideItem>

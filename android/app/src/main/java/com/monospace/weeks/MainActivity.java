@@ -1,4 +1,4 @@
-package com.weeks;
+package com.monospace.weeks;
 
 import android.os.Bundle;
 

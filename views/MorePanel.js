@@ -17,6 +17,7 @@ import SettingsModal from './SettingsModal'
 import ResetConfirmPanel from './ResetConfirmPanel'
 import ImportConfirmPanel from './ImportConfirmPanel'
 import Notification from '../manager/notification'
+import strings from '../i18n/localization'
 
 export default class MorePanel extends Panel {  
   state = {
@@ -83,7 +84,7 @@ export default class MorePanel extends Panel {
 
   checkComplete() {
     var done = true
-    let items = [this.item1, this.item2, this.item3]
+    let items = [this.item1, this.item2]//, this.item3
     for (var i in items) {
 
       let item = items[i]
@@ -126,9 +127,9 @@ export default class MorePanel extends Panel {
               show={show} >
               <TouchableOpacity onPress={this._onPressImportButton.bind(this)} disabled={disabled}>
                 <Text style={styles.title}>
-                  Import{'\n'}
+                  {strings.import}{'\n'}
                   <Text style={styles.description}>
-                    from last week
+                    {strings.from_prev}
                   </Text>
                 </Text>
               </TouchableOpacity>
@@ -143,14 +144,14 @@ export default class MorePanel extends Panel {
               show={show} >
               <TouchableOpacity onPress={this._onPressResetButton.bind(this)} disabled={disabled}>
                 <Text style={styles.title}>
-                  Reset{'\n'}
+                  {strings.reset}{'\n'}
                   <Text style={styles.description}>
-                    current week
+                    {strings.current_week}
                   </Text>
                 </Text>
               </TouchableOpacity>
             </SlideItem>
-            <SlideItem 
+            {/* <SlideItem 
               style={styles.slideItem}
               ref={(item) => { this.item3 = item}}
               onFinishAnim={this.checkComplete.bind(this)}
@@ -160,13 +161,13 @@ export default class MorePanel extends Panel {
               show={show} >
               <TouchableOpacity onPress={this._onPressSetting.bind(this)} disabled={disabled}>
                 <Text style={styles.title}>
-                  Setting{'\n'}
+                  About{'\n'}
                   <Text style={styles.description}>
-                    preference
+                    this App
                   </Text>
                 </Text>
               </TouchableOpacity>
-            </SlideItem>
+            </SlideItem> */}
             <View pointerEvents="none" style={styles.extraSpace}></View>
             {/* ------- Modals ------ */}
         

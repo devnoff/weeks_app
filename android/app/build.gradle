@@ -98,7 +98,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.weeks"
+        applicationId "com.monospace.weeks"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
@@ -155,6 +155,7 @@ repositories {
 
 
 dependencies {
+    compile project(':react-native-localization')
     compile project(':react-native-haptic-feedback')
     compile project(':react-native-vector-icons')
     compile fileTree(dir: "libs", include: ["*.jar"])

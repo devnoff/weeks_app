@@ -17,8 +17,10 @@
     "react-native-gridview": "^0.1.1",
     "react-native-haptic-feedback": "^1.0.1",
     "react-native-iphone-x-helper": "^1.0.2",
+    "react-native-localization": "^0.2.3",
     "react-native-on-layout": "^2.0.2",
     "react-native-sortable-list": "0.0.20",
+    "react-native-store-review": "^0.1.5",
     "react-native-vector-icons": "^4.5.0"
   },
   "devDependencies": {
@@ -31,8 +33,8 @@
     "preset": "react-native"
   },
   "rnpm": {
-      "assets": [
-    "./assets/fonts/"
-      ]
+    "assets": [
+      "./assets/fonts/"
+    ]
   }
 }

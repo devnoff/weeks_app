@@ -11,13 +11,14 @@ export default class PanelController {
 
   constructor(parentView, root) {
     _parentView = parentView
-    _children.push(root)
+    _children = [ root ]
 
     this.getRootPanel = () => {
       return _children[0]
     }
 
     this.getCount = () => {
+      console.log(_children, 'panel controller')
       return _children.length
     }
 
@@ -32,6 +33,7 @@ export default class PanelController {
     this.getCurrentPanelEl = () => {
       let last = this._lastChild()
       let el = this.refs[last.ref]
+      console.log(_children, 'getCurrentPanelEl', last.ref)
       return el
     }
 
@@ -55,25 +57,33 @@ export default class PanelController {
 
       // 2.
       this.refs[last.ref].onHide = () => {
-        // Remove Ref
-        this.refs = {}
 
         // Empty children
-        _children = [_children[0]]
+        let root = _children[0]
+        _children = [root]
+
+        // Remove Ref
+        let el = this.refs[root.ref]
+        this.refs = {}
+        this.refs[root.ref] = el
   
         // Animate show child view through force update parent
         let tmpl = this.getRenderableElement()
-        tmpl.visible = false
+        if (tmpl)
+          tmpl.visible = false
+
         _parentView.forceUpdate(() => {
           let last = this._lastChild()
           let el = this.refs[last.ref]
-          el.setPanelController(this)
-          el.onShow = () => {
-            _animating = false
+          if (el) {
+            el.setPanelController(this)
+            el.onShow = () => {
+              _animating = false
 
-            if (callback) callback(true)
+              if (callback) callback(true)
+            }
+            el.show()
           }
-          el.show()
         })
       }
 
@@ -117,11 +127,13 @@ export default class PanelController {
     if (_children.length > 0) {
       let last = this._lastChild()
       let el = this.refs[last.ref]
-      el.onHide = () => {
-        // Show New Panel
-        show()
+      if (el) {
+        el.onHide = () => {
+          // Show New Panel
+          show()
+        }
+        el.hide()
       }
-      el.hide()
     } else {
       show()
     }
@@ -146,17 +158,20 @@ export default class PanelController {
   
         // Animate show child view through force update parent
         let tmpl = this.getRenderableElement()
-        tmpl.visible = false
+        if (tmpl)
+          tmpl.visible = false
         _parentView.forceUpdate(() => {
           let last = this._lastChild()
           let el = this.refs[last.ref]
-          el.setPanelController(this)
-          el.onShow = () => {
-            _animating = false
+          if (el) {
+            el.setPanelController(this)
+            el.onShow = () => {
+              _animating = false
 
-            if (callback) callback()
+              if (callback) callback()
+            }
+            el.show()
           }
-          el.show()
         })
       }
       this.refs[last.ref].hide()
@@ -198,15 +213,17 @@ export default class PanelController {
     if (_children.length > 0) {
       let last = this._lastChild()
       let el = this.refs[last.ref]
-      el.onHide = () => {
-        // 새 Panel을 present 하기 전에 root를 제외한 panel들을 모두 지음
-        _children = [_children[0]]
-        delete this.refs[last.ref]
-
-        // Show New Panel
-        show()
+      if (el) {
+        el.onHide = () => {
+          // 새 Panel을 present 하기 전에 root를 제외한 panel들을 모두 지음
+          _children = [_children[0]]
+          delete this.refs[last.ref]
+  
+          // Show New Panel
+          show()
+        }
+        el.hide()
       }
-      el.hide()
     } else {
       show()
     }
@@ -232,6 +249,8 @@ export default class PanelController {
   }
 
   _lastChild() {
+    console.log(this.refs, 'panel refs')
+    if (_children.length < 1) return undefined
     return _children[_children.length - 1]
   }
 

@@ -1,5 +1,6 @@
 {
     "ctime": false,
+    "displayed_new_week_notice": false,
     "column_icons": [
       {
         "name": "weather-sunset",

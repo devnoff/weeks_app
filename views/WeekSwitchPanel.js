@@ -17,6 +17,7 @@ import Notification from '../manager/notification'
 import WeekManager from '../manager/week'
 import ItemManager from '../manager/item'
 import { isIphoneX } from 'react-native-iphone-x-helper'
+import strings from '../i18n/localization'
 
 const smallScreen = Dimensions.get('window').width < 680
 
@@ -32,8 +33,6 @@ export default class WeekSwitchPanel extends Panel {
       start_date_str: WeekManager.getCurrentWeek().getStartDateStr(),
       end_date_str: WeekManager.getCurrentWeek().getEndDateStr()
     }
-
-    console.log('dd')
   }
 
   show() {
@@ -44,15 +43,11 @@ export default class WeekSwitchPanel extends Panel {
     this.setState({show: false})
   }
 
-  _handlePressAddButton() {
-    ReactNativeHapticFeedback.trigger('impactLight')
-    Notification.post('create_overlay_request')
-  }
-
   _handlePressCloseButton() {
+    ReactNativeHapticFeedback.trigger('selection')
     ItemManager.sharedInstance().lock()
     let endColumn = this.getPanelController().getParent()
-    this.getPanelController().pop(() => {
+    this.getPanelController().popToRootPanel(() => {
       endColumn.moreButtonFadeIn()
       ItemManager.sharedInstance().unlock()
     })
@@ -82,7 +77,7 @@ export default class WeekSwitchPanel extends Panel {
 
   _handleLongPressWeekButton() {
 
-    ReactNativeHapticFeedback.trigger('impactLight')
+    ReactNativeHapticFeedback.trigger('impactHeavy')
 
     if (WeekManager.getCurrentWeek().isThisWeek()) return
 
@@ -128,7 +123,7 @@ export default class WeekSwitchPanel extends Panel {
         <TouchableOpacity onLongPress={this._handleLongPressWeekButton.bind(this)} onPress={this._handlePressCloseButton.bind(this)} style={styles.weekBox}>
           <View style={styles.weekView}>
             <View style={styles.selectBox}>
-              <Text style={styles.select}>PRESS TO SELECT</Text>
+              <Text style={styles.select}>{strings.press_select}</Text>
             </View>
             <Text style={styles.weekText}>{year}<Text style={styles.weekNum}>#{week_no}</Text></Text>
             <Text style={styles.periodText}>{start_date_str}{"\n"}~ {end_date_str}</Text>
@@ -163,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'center',
     paddingTop: 10,
-    paddingLeft: 10,
+    paddingLeft: 0,
     // backgroundColor: 'red'
   },
   weekText: {

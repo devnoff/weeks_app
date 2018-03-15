@@ -3,14 +3,15 @@ import moment from 'moment'
 import { isIphoneX } from 'react-native-iphone-x-helper'
 import React, { Component } from 'react';
 import {
-  View, Text, StyleSheet
+  View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback
 } from 'react-native';
 import SlideItem from './SlideItem'
 
 export default class WeekHeader extends Component {
 
   state = {
-    show: true
+    show: true,
+    selectedRow: null
   }
 
   componentWillReceiveProps(nextProps) {
@@ -19,6 +20,12 @@ export default class WeekHeader extends Component {
     } else if (nextProps.show == false) {
       this.hide()
     }
+
+    // if (nextProps.hasOwnProperty('selectionMode')) {
+    //   this.setState({
+    //     selectionMode: selectionMode
+    //   })
+    // }
   }
 
   show() {
@@ -29,10 +36,23 @@ export default class WeekHeader extends Component {
     this.setState({show: false})
   }
 
+  _onPress(day, e) {
+    const { selectionMode } = this.props
+    if (selectionMode) return
+    
+    var selected = this.state.selectedRow == day ? null : day
+    this.setState({
+      selectedRow: selected
+    })
+    this.props.onSelectedRow(selected)
+  }
+
   _getDayView(name) {
+    const { week, selectionMode } = this.props
+    const { selectedRow } = this.state
     let days = ['sun','mon','tue','wed','thu','fri','sat']
     let todayStr = days[moment().day()]
-    let isToday = todayStr === name
+    let isToday = todayStr === name && week.isThisWeek()
     let isSunday = name === 'sun'
 
     var textBoxStyle = [styles.textBox]
@@ -42,11 +62,21 @@ export default class WeekHeader extends Component {
     if (isSunday) textStyle.push(styles.sunText)
     if (isToday) textStyle.push(styles.todayText)
 
-    return (<View style={styles.view}>
-              <View style={textBoxStyle}>
-                <Text style={textStyle}>{name}</Text>
+    var selected
+    if (name == selectedRow && !selectionMode)
+      selected = { 
+        backgroundColor: '#dde0d2', //b6baae22
+        borderTopStartRadius: isIphoneX() ? 15 : 0,
+        borderBottomStartRadius: isIphoneX() ? 15 : 0
+      }
+
+    return (<TouchableWithoutFeedback onPress={this._onPress.bind(this, name)}>
+              <View style={[styles.view, selected]}>
+                <View style={textBoxStyle}>
+                  <Text style={textStyle}>{name}</Text>
+                </View>
               </View>
-            </View>)
+            </TouchableWithoutFeedback>)
   }
 
   render() {
@@ -64,9 +94,10 @@ export default class WeekHeader extends Component {
           flexDirection: 'row',
           overflow: 'hidden'
         }}>
-          <View style={styles.iconBox}>
-            <Icon style={{color:"#aaa"}} name="unfold-more-vertical"/>
-          </View>
+          <TouchableOpacity style={styles.iconBox} onPress={this.props.onPressSetting}>
+            {/* <Icon style={{color:"#aaa"}} name="unfold-more-vertical"/> */}
+            <Icon style={{color:"#aaa"}} size={14} name="information-variant"/>
+          </TouchableOpacity>
         </View>
         {this._getDayView('mon')}
         {this._getDayView('tue')}
@@ -95,7 +126,8 @@ const styles = StyleSheet.create({
   iconBox: {
     flex:1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    // backgroundColor: 'red'
   },
   textBox: {
     flex:1,

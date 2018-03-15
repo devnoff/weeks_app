@@ -8,14 +8,21 @@ import {
 import SlideItem from './SlideItem'
 import Panel from './Panel'
 import Notification from '../manager/notification'
+import WeekManager from '../manager/week'
+import strings from '../i18n/localization'
 
 export default class ResetConfirmPanel extends Panel {  
-  state = {
-    show: false,
-  }
 
   constructor(props) {
     super(props)
+
+    let week = WeekManager.getCurrentWeek()
+
+    this.state = {
+      show: false,
+      year: week.getYear(),
+      weekNo: week.getWeekNumber()
+    }
   }
 
   show() {
@@ -58,7 +65,7 @@ export default class ResetConfirmPanel extends Panel {
 
   render() {
 
-    const { show, showSettingModal } = this.state
+    const { show, showSettingModal, year, weekNo } = this.state
 
     return (
       <View pointerEvents="box-none" style={styles.view}>
@@ -71,7 +78,7 @@ export default class ResetConfirmPanel extends Panel {
           to={10} 
           show={show} >
           <Text style={styles.description}>
-            You will lose all the To Do Items in current week. Do you still want to reset?
+            {strings.formatString(strings.reset_confirm_desc, `${year}#${weekNo}`)}
           </Text>
         </SlideItem>
         <SlideItem 
@@ -84,7 +91,7 @@ export default class ResetConfirmPanel extends Panel {
           show={show} >
           <TouchableOpacity onPress={this._onPressConfirmButton.bind(this)}>
             <Text style={styles.title}>
-              Yes, I do
+            {strings.confirm}
             </Text>
           </TouchableOpacity>
         </SlideItem>

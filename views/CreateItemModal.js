@@ -7,6 +7,7 @@ ImageBackground, Platform, TouchableWithoutFeedback
 } from 'react-native';
 import FadeItem from './FadeItem'
 import Notification from '../manager/notification';
+import strings from '../i18n/localization'
 
 export default class CreateItemModal extends Component {
 
@@ -96,7 +97,9 @@ export default class CreateItemModal extends Component {
                   underlineColorAndroid='rgba(0,0,0,0)'
                   isFocused={true}
                   style={styles.titleInput}
-                  placeholder="Title"
+                  placeholder={strings.title}
+                  placeholderTextColor="#ddd"
+                  disableFullscreenUI={true}
                   editable={!disabled}
                   onChangeText={(title) => {
                     this.setState({title})
@@ -112,7 +115,9 @@ export default class CreateItemModal extends Component {
                 ref={(input) => {this.noteInput = input}}
                 style={styles.noteInput}
                 multiline={true}
-                placeholder="Note"
+                placeholder={strings.note}
+                placeholderTextColor="#ddd"
+                disableFullscreenUI={true}
                 editable={!disabled}
                 underlineColorAndroid='rgba(0,0,0,0)'
                 onChangeText={(note) => this.setState({note})}
@@ -166,18 +171,23 @@ const styles = StyleSheet.create({
   },
   titleView: {
     flex: 1,
-    marginLeft: 10
+    marginLeft: 10,
+    // backgroundColor:'orange'
   },
   noteView: {
     flex: 1,
     paddingLeft: 20,
     borderLeftWidth: 1,
-    borderLeftColor: '#ddd'
+    borderLeftColor: '#ddd',
+    // backgroundColor:'green'
   },
   titleInput: {
-    fontSize: 20
+    paddingTop: 5,
+    fontSize: 20,
+    // backgroundColor:'red'
   },
   noteInput: {
-    fontSize: 20
+    fontSize: 20,
+    // backgroundColor:'blue'
   }
 })

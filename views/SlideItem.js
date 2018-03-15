@@ -95,11 +95,17 @@ export default class SlideItem extends Component {
     })
   }
 
+  _onLayout(e) {
+    if (this.props.onLayout)
+      this.props.onLayout(e)
+  }
+
   render() {
     let { fade, x } = this.state;
 
     return (
       <Animated.View
+        onLayout={this._onLayout.bind(this)}
         style={[this.props.style, {
           opacity: fade,
           transform: [{ translateX: x}]

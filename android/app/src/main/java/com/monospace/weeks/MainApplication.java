@@ -1,9 +1,10 @@
-package com.weeks;
+package com.monospace.weeks;
 
 import android.app.Application;
 
 import com.crashlytics.android.Crashlytics;
 import com.facebook.react.ReactApplication;
+import com.babisoft.ReactNativeLocalization.*;
 import com.reactlibrary.RNReactNativeHapticFeedbackPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
@@ -14,6 +15,7 @@ import com.facebook.soloader.SoLoader;
 import io.fabric.sdk.android.Fabric;
 import java.util.Arrays;
 import java.util.List;
+
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -27,6 +29,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new ReactNativeLocalizationPackage(),
             new RNReactNativeHapticFeedbackPackage(),
             new VectorIconsPackage()
       );
@@ -48,4 +51,6 @@ public class MainApplication extends Application implements ReactApplication {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
   }
+
+
 }

@@ -5,7 +5,8 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput
 } from 'react-native';
 import SlideItem from './SlideItem'
 import FadeItem from './FadeItem'
@@ -29,7 +30,8 @@ export default class ItemPanel extends Panel {
     this.state = {
       show: false,
       todoItem: props.item,
-      disabled: false
+      disabled: false,
+      descHeight: 0
     }
 
   }
@@ -123,7 +125,7 @@ export default class ItemPanel extends Panel {
 
   render() {
 
-    const { show, todoItem, disabled } = this.state
+    const { show, todoItem, disabled, descHeight } = this.state
 
     return (
       <OnLayout pointerEvents="box-none" style={styles.view}>
@@ -132,7 +134,7 @@ export default class ItemPanel extends Panel {
 
           {/* TOP */}
   
-          <View style={styles.top}>
+          <View style={styles.top} ref={(ref) => { this.top = ref}}>
             <SlideItem
               style={styles.slideItem}
               ref={(item) => { this.item1 = item}}
@@ -140,10 +142,25 @@ export default class ItemPanel extends Panel {
               x={-80} 
               delay={50} 
               to={10} 
-              show={show} >
+              show={show} 
+              onLayout={(e)=>{
+                const {height} = e.nativeEvent.layout
+                this.top.measure((x, y, width, topHeight, pageX, pageY)=> {
+                  this.setState({
+                    descHeight: topHeight - height
+                  })
+                })
+              }}
+            >
               <TouchableOpacity disabled={disabled} onPress={this._onPressTitleButton.bind(this)}>
                 <Text style={styles.title}>
-                  {todoItem.title}
+                  {function() {
+                    var t = todoItem.title
+                    if (t.length > 18) {
+                      t = t.substring(0, 18) + '...'
+                    }
+                    return t
+                  }()}
                   {<Icon color="#ccc" name="lead-pencil" size={15}/>}
                 </Text>
               </TouchableOpacity>
@@ -156,11 +173,18 @@ export default class ItemPanel extends Panel {
               delay={150} 
               to={10} 
               show={show} >
-              <TouchableOpacity disabled={disabled} onPress={this._onPressTitleButton.bind(this)}>
+              <TextInput
+                  style={[styles.description, {height: descHeight}]}
+                  multiline={true}
+                  editable={false}
+                  underlineColorAndroid='rgba(0,0,0,0)'
+                  value={todoItem.note}
+                />
+              {/* <TouchableOpacity disabled={disabled} onPress={this._onPressTitleButton.bind(this)}>
                 <Text style={styles.description}>
                   {todoItem.note}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </SlideItem>
           </View>
   
@@ -224,6 +248,8 @@ const styles = StyleSheet.create({
   },
   top: {
     flex: 2,
+    // backgroundColor: 'red',
+    justifyContent: 'flex-start',
   },
   middle: {
     flex: 1,
@@ -235,7 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   slideItem: {
-    justifyContent: 'center',
+    // justifyContent: 'flex-start',
   },
   title: {
     fontFamily: 'Courier-Bold',
@@ -245,6 +271,7 @@ const styles = StyleSheet.create({
     color: '#333'
   },
   description: {
+    // flex: 1,
     fontFamily: 'Courier',
     color: '#aaa',
     fontWeight: 'normal',

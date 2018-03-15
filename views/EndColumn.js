@@ -128,6 +128,10 @@ export default class EndColumn extends Component {
   }
 
   _getMoreEl() {
+
+    // if (!this.panelController.getCurrentPanelEl()) return undefined
+
+    console.log(this.panelController.getCurrentPanelEl())
     if (this.panelController.getCount() < 2)
       return <Icon color="#333" name="equal" size={30}/>
     else

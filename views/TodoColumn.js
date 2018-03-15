@@ -86,7 +86,7 @@ class Cell extends Component {
 
     if (newState.hasOwnProperty('week') && this.state.week != nextProps.week) { 
       //newState.hasOwnProperty('data')
-      console.log('column refreshing !')
+      // console.log('column refreshing !')
       this.setState({data : null}, () => {
         this.setState(newState)    
       })
@@ -98,7 +98,7 @@ class Cell extends Component {
 
   _onPressItem(order) {
 
-    console.log(`Pressed item ${order}`)
+    // console.log(`Pressed item ${order}`)
     // console.log(this.state.week.rawData())
     
     let itemManager = ItemManager.sharedInstance()
@@ -124,7 +124,7 @@ class Cell extends Component {
   }
 
   render() {
-    const { column, day } = this.props
+    const { column, day, style } = this.props
     const { data, reset } = this.state
 
     // const { data } = this.state
@@ -133,7 +133,10 @@ class Cell extends Component {
 
     // console.log(data, 'render Cell' , column, day)
     return (
-      <View  style={styles.todoCell}>
+      <FadeItem
+        show={true}
+        delay={300}
+        style={[styles.todoCell, style]}>
         { !reset && items.length > 0 ? 
           <SortableList
             horizontal
@@ -155,7 +158,7 @@ class Cell extends Component {
             }}
             onReleaseRow={() => {
               if (this._nextOrder) {
-                console.log(this._nextOrder)
+                // console.log(this._nextOrder)
                 var nextOrderedItems = []
                 var newOrder = []
                 for (var i in this._nextOrder) {
@@ -190,7 +193,7 @@ class Cell extends Component {
             }
             />
           : undefined }
-      </View>
+      </FadeItem>
     )
   }
 }
@@ -303,7 +306,7 @@ class Item extends Component {
     
     this.setState(newState, () => {
       if (needUpdate) {
-        console.log('force updating')
+        // console.log('force updating')
         // this.forceUpdate()
       }
     })
@@ -314,7 +317,7 @@ class Item extends Component {
   _onLayout(item, e) {
     const {x,y,width,height } = e.nativeEvent.layout
 
-    console.log(this._parent)
+    // console.log(this._parent)
 
     if (this._parent) this._parent.onResize(e.nativeEvent.layout)
 
@@ -323,7 +326,7 @@ class Item extends Component {
     //   layout: e.nativeEvent.layout
     // })
     // if (item.key == 'sun_0_0')
-      console.log(item.key, 'Item onLayout', width)
+    // console.log(item.key, 'Item onLayout', width)
   }
 
   render() {
@@ -368,7 +371,9 @@ class Item extends Component {
               style={[itemStyle, layout ? {width: layout.width } : undefined]} 
               onLayout={this._onLayout.bind(this, item)}
             >
-              <Text style={textStyle}>{item.title}</Text>
+              <Text style={textStyle}>
+              {item.title}
+              </Text>
               {note && note.length > 0 ? <Text style={{fontSize:9, color:'#aaa'}}>{note}</Text> : undefined}
             </View>
           )
@@ -411,6 +416,8 @@ export default class TodoColumn extends Component {
 
   _cells = {}
 
+  _mounted = false
+
   constructor(props) {
     super(props)
 
@@ -418,7 +425,8 @@ export default class TodoColumn extends Component {
       selectedItemKey: null,
       show: true,
       week: props.week,
-      data: null
+      data: null,
+      selectedRow: props.selectedRow
     } 
   }
 
@@ -427,6 +435,12 @@ export default class TodoColumn extends Component {
       this.show()
     } else if (nextProps.show == false) {
       this.hide()
+    }
+
+    if (nextProps.hasOwnProperty('selectedRow')) {
+      this.setState({
+        selectedRow: nextProps.selectedRow
+      })
     }
 
     if (nextProps.hasOwnProperty('week')) { //  && this.state.week.weekId() != nextProps.week.weekId()
@@ -452,15 +466,18 @@ export default class TodoColumn extends Component {
     this.state.week.getWeekDataAtColumn(this.props.column, (data) => {
       // console.log(data, 'column', this.props.column)
       // this._data = data
-      this.setState({
-        data: data
-      })
+      if (this._mounted)
+        this.setState({
+          data: data
+        })
 
       if (callback) callback(data)
     })
   }
 
   componentDidMount() {
+    this._mounted = true
+
     ItemManager.sharedInstance().addListener('delete', this, this._handleItemDeleted.bind(this))
 
     this.loadData(function() {
@@ -469,6 +486,7 @@ export default class TodoColumn extends Component {
   }
 
   componentWillUnmount() {
+    this._mounted = false
     ItemManager.sharedInstance().removeListener('delete', this)
   }
 
@@ -501,9 +519,18 @@ export default class TodoColumn extends Component {
 
   _getCellForDay(day) {
     const { column } = this.props
+    const { selectedRow } = this.state
     let cell_id = `${day}_${column}`
 
+    var style
+
+    if (day == selectedRow)
+      style = {
+        backgroundColor: '#dde0d2'//b6baae22
+      }
+
     return (<Cell
+              style={style}
               day={day} 
               column={column} 
               data={this.state.data ? this.state.data[day] : [] || []} 
@@ -514,13 +541,13 @@ export default class TodoColumn extends Component {
 
   _onPressSpace() {
     let item = ItemManager.sharedInstance().getSelectedItem()
-    if (item) {
+    // if (item) {
       ItemManager.sharedInstance().setSelectedItem(null)
-    }
+    // }
   }
 
   render() {
-    const { icon } = this.props
+    const { icon, onPressHeader } = this.props
     const { show } = this.state
 
     return (
@@ -528,7 +555,11 @@ export default class TodoColumn extends Component {
       <View style={{flex: 1, flexDirection: 'column'}}
       >
         
-        <View style={styles.headerCell}>{icon}</View>
+        <TouchableOpacity onPress={onPressHeader} style={styles.headerCell}>
+          <View>
+            {icon}
+          </View>
+        </TouchableOpacity>
 
         {this._getCellForDay('mon')}
         {this._getCellForDay('tue')}
@@ -590,6 +621,7 @@ const styles = StyleSheet.create({
     // backgroundColor: 'blue',
   },
   item: {
+    backgroundColor: '#f6f8f1',
     borderRadius: 8,
     borderColor: '#333',
     borderWidth: 1.5,
@@ -615,11 +647,13 @@ const styles = StyleSheet.create({
     marginRight: 6
   },
   itemText: {
+    height: 17,
+    fontFamily: 'Courier-Bold',
     color: '#333',
-    fontSize: 15,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
     overflow: 'visible',
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     paddingHorizontal: 2,
     // backgroundColor: 'red'
   },
