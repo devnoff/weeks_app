@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.monospace.weeks"
-    android:versionCode="8"
-    android:versionName="1.0">
+    android:versionCode="2"
+    android:versionName="1.0.1">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
@@ -32,6 +32,7 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="a3d68f128bdd2af22105b3a0c2457f2ac4e61f74" />
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
     </application>
 
 </manifest>

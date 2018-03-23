@@ -7,6 +7,7 @@ import com.reactlibrary.RNReactNativeHapticFeedbackPackage;
 import com.facebook.react.ReactActivity;
 import com.crashlytics.android.Crashlytics;
 import io.fabric.sdk.android.Fabric;
+import android.content.Intent;
 
 public class MainActivity extends ReactActivity {
 
@@ -28,5 +29,11 @@ public class MainActivity extends ReactActivity {
         super.onCreate(savedInstanceState);
         Fabric.with(this, new Crashlytics());
         SoLoader.init(this, false);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        MainApplication.getCallbackManager().onActivityResult(requestCode, resultCode, data);
     }
 }

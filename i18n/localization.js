@@ -15,7 +15,7 @@ let strings = new LocalizedStrings({
     "cancel":	"cancel",
     "duplicate_desc":	"Choose cells where you want to copy to",
     "done":	"Done",
-    "edit_desc":	"ModifyTo-Do Item",
+    "edit_desc":	"Modify To-Do Item",
     "import":	"Import",
     "from_prev":	"from previous week",
     "nothing": "Nothing to import in previous week",
@@ -27,8 +27,10 @@ let strings = new LocalizedStrings({
     "contact_dev":	"Contact Developer",
     "rate_app":	"Rate App",
     "like_on_fb": "Like on Facebook",
+    "share_app": "Share this App",
     "date_format": "D MMM YYYY",
-    "date_format_short": "D MMM \'YY"
+    "date_format_short": "D MMM \'YY",
+    "share_msg": "Look! I found the Awesome App! https://appurl.io/jf15zz3n"
   },
   "ko": {
     "new_week_notice" :	"새로운 한주 입니다",
@@ -56,8 +58,72 @@ let strings = new LocalizedStrings({
     "contact_dev" :	"개발자에게 문의하기",
     "rate_app" :	"앱 평가하기",
     "like_on_fb": "페북에 좋아요하기",
+    "share_app": "친구에게 앱소개하기",
     "date_format": "YYYY.M.D", //     2018.12.14
-    "date_format_short": "YY\' M.D"// 18' 12.13
+    "date_format_short": "YY\' M.D", // 18' 12.13
+    "share_msg": "이 앱 진짜 괜찮아. 얼른 받아보셈~ https://appurl.io/jf15zz3n"
+  },
+  "jp": {
+    "new_week_notice" :	"新しい週です",
+    "new_week_greeting" :	"良い一日を過ごしてください",
+    "import_desc": "先週のTo-Doアイテムのインポート",
+    "start" :	"開始",
+    "press_select" :	"押して選ぶ",
+    "week" :	"週",
+    "create_desc" :	"新しくする事を作成",
+    "title" :	"タイトル",
+    "note" :	"メモ",
+    "next" :	"次",
+    "cancel" :	"キャンセル",
+    "duplicate_desc" :	"コピするセールをお選びください",
+    "done" :	"完了",
+    "edit_desc" :	"To-Doアイテムの変更",
+    "import" :	"インポート",
+    "from_prev" :	"先週から",
+    "nothing": "インポートするアイテムがありません",
+    "reset" :	"リセット",
+    "current_week": "今週",
+    "import_confirm_desc" :	`先週 {0} から今週 {1} にあなたの予定アイテムをインポートします。`,
+    "confirm" :	"確認する",
+    "reset_confirm_desc" :	"今週のすべての予定項目が削除されます。",
+    "contact_dev" :	"デベロッパーに問い合わせ",
+    "rate_app" :	"アプリを評価",
+    "like_on_fb": "FBにいいねする",
+    "share_app": "友人に紹介する",
+    "date_format": "YYYY.M.D", //     2018.12.14
+    "date_format_short": "YY\' M.D", // 18' 12.13
+    "share_msg": "見て！ 私は素晴らしいアプリを見つけた。! https://appurl.io/jf15zz3n"
+  },
+  "zh": {
+    "new_week_notice" :	"又是新的一周",
+    "new_week_greeting" :	"快乐一周",
+    "import_desc": "从上周导入待办事项",
+    "start" :	"开始",
+    "press_select" :	"按下选择",
+    "week" :	"周",
+    "create_desc" :	"创建待办事项",
+    "title" :	"主题",
+    "note" :	"笔记",
+    "next" :	"下一个",
+    "cancel" :	"取消",
+    "duplicate_desc" :	"选择要复制到的单元格",
+    "done" :	"完成",
+    "edit_desc" :	"修改待办事项",
+    "import" :	"导入",
+    "from_prev" :	"从前一周开始",
+    "nothing": "上周没有什么可导入的",
+    "reset" :	"重置",
+    "current_week": "本周",
+    "import_confirm_desc" :	`我们会将待办事项从上周 {0} 导入当前周 {1}。`,
+    "confirm" :	"确认",
+    "reset_confirm_desc" :	"本周所有记上的资料会删掉。",
+    "contact_dev" :	"联系开发者",
+    "rate_app" :	"评价软件",
+    "like_on_fb": "Like on Facebook",
+    "share_app": "介绍给朋友",
+    "date_format": "YYYY.M.D", //     2018.12.14
+    "date_format_short": "YY\' M.D", // 18' 12.13
+    "share_msg": "看！ 我找到了真棒应用程序！ https://appurl.io/jf15zz3n"
   }
 });
 

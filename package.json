@@ -13,6 +13,7 @@
     "react": "16.2.0",
     "react-native": "0.52.0",
     "react-native-bounceable": "^0.2.1",
+    "react-native-fbsdk": "^0.7.0",
     "react-native-flip-card": "^3.5.2",
     "react-native-gridview": "^0.1.1",
     "react-native-haptic-feedback": "^1.0.1",

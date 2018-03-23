@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-start',
     justifyContent: 'center',
-    marginLeft: isIphoneX() ? 10 : 0,
+    marginLeft: 10,
   },
   weekView: {
     flex: 1,

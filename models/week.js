@@ -97,7 +97,9 @@ export default class WeekModel {
     }
     else {
       try {
+        
         this._data = await DataManager.getWeekDataForKey(this._week_id)
+        
         // console.log(this._data, 'loadData new')
         if (!this._data) {
           this._data = _.cloneDeep(require('../data/initial_data.json'))

@@ -3,7 +3,7 @@ import { isIphoneX } from 'react-native-iphone-x-helper'
 import React, { Component } from 'react';
 import {
 Modal, View, Text, StyleSheet, Button, TouchableOpacity, TextInput, Image,
-ImageBackground, Platform, Linking, StatusBar
+ImageBackground, Platform, Linking, StatusBar, Share
 } from 'react-native';
 import FadeItem from './FadeItem'
 import * as StoreReview from 'react-native-store-review'
@@ -55,6 +55,11 @@ export default class SettingsModal extends Component {
     Linking.openURL('https://fb.com/weeksapp.io')
   }
 
+  _onPressShare() {
+    // 공유
+    Share.share(strings.share_msg).then(result => console.log(result)).catch(errorMsg => console.log(errorMsg))
+  }
+
   _onPressRate() {
     // 
 
@@ -101,8 +106,8 @@ export default class SettingsModal extends Component {
                     <Text style={styles.link}>{strings.rate_app}</Text>
                   </TouchableOpacity>
                   <Text style={{fontWeight: 'bold', color: '#aaa'}}>    |    </Text>
-                  <TouchableOpacity onPress={this._onPressLike}>
-                    <Text style={styles.link}>{strings.like_on_fb}</Text>
+                  <TouchableOpacity onPress={this._onPressShare}>
+                    <Text style={styles.link}>{strings.share_app}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
