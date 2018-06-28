@@ -101,8 +101,8 @@ android {
         applicationId "com.monospace.weeks"
         minSdkVersion 16
         targetSdkVersion 26
-        versionCode 3
-        versionName "1.1"
+        versionCode 4
+        versionName "1.1.1"
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
@@ -155,6 +155,11 @@ repositories {
 
 
 dependencies {
+    compile project(':react-native-version-number')
+    compile project(':react-native-vector-icons')
+    compile project(':react-native-localization')
+    compile project(':react-native-haptic-feedback')
+    compile project(':react-native-fbsdk')
     implementation project(':react-native-vector-icons')
     implementation project(':react-native-vector-icons')
     implementation project(':react-native-localization')

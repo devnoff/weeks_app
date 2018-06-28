@@ -8,6 +8,7 @@ ImageBackground, Platform, Linking, StatusBar, Share
 import FadeItem from './FadeItem'
 import * as StoreReview from 'react-native-store-review'
 import strings from '../i18n/localization'
+import VersionNumber from 'react-native-version-number'
 
 export default class SettingsModal extends Component {
 
@@ -57,7 +58,7 @@ export default class SettingsModal extends Component {
 
   _onPressShare() {
     // 공유
-    Share.share(strings.share_msg).then(result => console.log(result)).catch(errorMsg => console.log(errorMsg))
+    Share.share({message: strings.share_msg}).then(result => console.log(result)).catch(errorMsg => console.log(errorMsg))
   }
 
   _onPressRate() {
@@ -96,7 +97,7 @@ export default class SettingsModal extends Component {
             <View style={styles.body}>
               <View style={styles.logoBox}>
                 <Image resizeMode="contain" style={styles.logo} source={require('../images/logo_empty.png')} />
-                <Text style={styles.slogan}>WEEKs v1.0</Text>
+                <Text style={styles.slogan}>WEEKs v{VersionNumber.appVersion}</Text>
                 <View style={styles.linkBox}>
                   <TouchableOpacity onPress={this._onPressContact}>
                     <Text style={styles.link}>{strings.contact_dev}</Text>

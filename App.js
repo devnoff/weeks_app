@@ -76,7 +76,8 @@ export default class App extends Component {
       
       this.setState({
         week: week,
-        showNewWeekModal: showNewWeekModal
+        showNewWeekModal: showNewWeekModal,
+        selectedRow: moment().format('ddd').toLowerCase()
       })
     })
   }
@@ -137,6 +138,7 @@ export default class App extends Component {
     newWeek.getData((data) => {
       // console.log(data, 'prev week')
       data.week_id = this.state.week.weekId()
+      WeekModel.setAllItemsUndone(data)
       this.state.week.setData(data, () => {
         this.forceUpdate()
         if (this.endColumn)
@@ -554,6 +556,7 @@ export default class App extends Component {
                 week={week} 
                 ref={(ref) => { this.state.weekHeader = ref }}
                 onPressSetting={()=>{this.setState({showSettingModal: true})}}
+                selectedRow={selectedRow}
                 onSelectedRow={(day)=>{
                   this.setState({
                     selectedRow: day

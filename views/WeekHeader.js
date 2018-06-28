@@ -9,9 +9,13 @@ import SlideItem from './SlideItem'
 
 export default class WeekHeader extends Component {
 
-  state = {
-    show: true,
-    selectedRow: null
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      show: true,
+      selectedRow: props.selectedRow
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -21,11 +25,11 @@ export default class WeekHeader extends Component {
       this.hide()
     }
 
-    // if (nextProps.hasOwnProperty('selectionMode')) {
-    //   this.setState({
-    //     selectionMode: selectionMode
-    //   })
-    // }
+    if (nextProps.hasOwnProperty('selectedRow')) {
+      this.setState({
+        selectedRow: nextProps.selectedRow
+      })
+    }
   }
 
   show() {
@@ -41,9 +45,9 @@ export default class WeekHeader extends Component {
     if (selectionMode) return
     
     var selected = this.state.selectedRow == day ? null : day
-    this.setState({
-      selectedRow: selected
-    })
+    // this.setState({
+    //   selectedRow: selected
+    // })
     this.props.onSelectedRow(selected)
   }
 

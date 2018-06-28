@@ -322,4 +322,18 @@ export default class WeekModel {
     })
   }
 
+  static setAllItemsUndone(data) {
+    let todos = data.to_do
+    for (var day in todos) {
+      let cols = todos[day]
+      cols.forEach(col => {
+        col.forEach(item => {
+          item.done = false
+        })
+      })
+    }
+
+    return data
+  }
+
 }

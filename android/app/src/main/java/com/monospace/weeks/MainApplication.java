@@ -8,6 +8,11 @@ import com.facebook.appevents.AppEventsLogger;
 
 import com.crashlytics.android.Crashlytics;
 import com.facebook.react.ReactApplication;
+import com.apsl.versionnumber.RNVersionNumberPackage;
+import com.oblador.vectoricons.VectorIconsPackage;
+import com.babisoft.ReactNativeLocalization.ReactNativeLocalizationPackage;
+import com.reactlibrary.RNReactNativeHapticFeedbackPackage;
+import com.facebook.reactnative.androidsdk.FBSDKPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.babisoft.ReactNativeLocalization.ReactNativeLocalizationPackage;
 import com.reactlibrary.RNReactNativeHapticFeedbackPackage;
@@ -42,6 +47,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNVersionNumberPackage(),
             new VectorIconsPackage(),
             new ReactNativeLocalizationPackage(),
             new RNReactNativeHapticFeedbackPackage(),

@@ -63,7 +63,7 @@ let strings = new LocalizedStrings({
     "date_format_short": "YY\' M.D", // 18' 12.13
     "share_msg": "이 앱 진짜 괜찮아. 얼른 받아보셈~ https://appurl.io/jf15zz3n"
   },
-  "jp": {
+  "ja": {
     "new_week_notice" :	"新しい週です",
     "new_week_greeting" :	"良い一日を過ごしてください",
     "import_desc": "先週のTo-Doアイテムのインポート",
@@ -94,7 +94,7 @@ let strings = new LocalizedStrings({
     "date_format_short": "YY\' M.D", // 18' 12.13
     "share_msg": "見て！ 私は素晴らしいアプリを見つけた。! https://appurl.io/jf15zz3n"
   },
-  "zh": {
+  "zh-CN": {
     "new_week_notice" :	"又是新的一周",
     "new_week_greeting" :	"快乐一周",
     "import_desc": "从上周导入待办事项",
